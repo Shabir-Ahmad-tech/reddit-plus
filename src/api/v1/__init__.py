@@ -13,6 +13,7 @@ from .subreddits import router as subreddits_router
 from .competitors import router as competitors_router
 from .notifications import router as notifications_router
 from .settings import router as settings_router
+from .trends import router as trends_router
 
 v1_router = APIRouter(prefix="/api/v1")
 
@@ -25,5 +26,6 @@ v1_router.include_router(subreddits_router)
 v1_router.include_router(competitors_router)
 v1_router.include_router(notifications_router)
 v1_router.include_router(settings_router)
+v1_router.include_router(trends_router)
 
 __all__ = ["v1_router"]

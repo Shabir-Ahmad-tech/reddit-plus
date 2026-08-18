@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>REDDIT PLUS // Opportunity Intelligence Platform</title>
+  <title>REDDIT PLUS // Opportunity Intelligence & SaaS Trends Platform</title>
 
   <!-- PWA & Mobile App Settings -->
   <link rel="manifest" href="/manifest.json" />
@@ -58,6 +58,10 @@
       --accent-blue: #38BDF8;
       --accent-blue-bg: rgba(56, 189, 248, 0.1);
       --accent-blue-border: rgba(56, 189, 248, 0.3);
+
+      --accent-cyan: #06B6D4;
+      --accent-cyan-bg: rgba(6, 182, 212, 0.1);
+      --accent-cyan-border: rgba(6, 182, 212, 0.3);
 
       --accent-amber: #F59E0B;
       --accent-amber-bg: rgba(245, 158, 11, 0.1);
@@ -300,23 +304,23 @@
       padding: 6px;
       cursor: pointer;
     }
-
     .topbar-heading {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 800;
+      letter-spacing: 0.5px;
       color: #FFF;
-      letter-spacing: -0.2px;
       text-transform: uppercase;
     }
     .topbar-subheading {
+      font-family: var(--font-mono);
       font-size: 11px;
       color: var(--text-muted);
-      font-family: var(--font-mono);
     }
+
     .topbar-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     /* ── BUTTONS ─────────────────────────────── */
@@ -325,86 +329,72 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      padding: 8px 14px;
       font-family: var(--font-display);
       font-size: 12px;
       font-weight: 700;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.4px;
       text-transform: uppercase;
-      cursor: pointer;
+      padding: 8px 14px;
       border: 1px solid transparent;
-      background: transparent;
-      color: var(--text-main);
-      transition: all 0.12s ease;
-      text-decoration: none;
+      cursor: pointer;
       user-select: none;
-      min-height: 38px;
+      text-decoration: none;
+      transition: all 0.12s ease;
+      white-space: nowrap;
     }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-primary {
       background: var(--brand-orange);
       color: #FFF;
-      border-color: #FF5722;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      border-color: #FF6B35;
     }
-    .btn-primary:hover { background: var(--brand-orange-hover); }
-    .btn-primary:active { transform: translateY(1px); }
-
+    .btn-primary:hover:not(:disabled) {
+      background: var(--brand-orange-hover);
+      box-shadow: 0 0 12px rgba(255, 69, 0, 0.4);
+    }
     .btn-secondary {
       background: var(--bg-surface-elevated);
       color: var(--text-main);
       border-color: var(--border-medium);
     }
-    .btn-secondary:hover {
+    .btn-secondary:hover:not(:disabled) {
       background: var(--bg-surface-hover);
-      color: #FFF;
       border-color: var(--border-strong);
     }
-
     .btn-ghost {
       background: transparent;
       color: var(--text-secondary);
+      border-color: var(--border-subtle);
     }
-    .btn-ghost:hover {
+    .btn-ghost:hover:not(:disabled) {
       background: var(--bg-surface-elevated);
-      color: #FFF;
+      color: var(--text-main);
+      border-color: var(--border-medium);
     }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
 
-    .btn-sm {
-      padding: 6px 10px;
-      font-size: 11px;
-      min-height: 32px;
-    }
-
-    /* ── PAGES ───────────────────────────────── */
-    .page {
-      padding: 24px;
-      flex: 1;
-      display: none;
-    }
-    .page.active { display: block; }
-
-    /* ── METRICS GRID ────────────────────────── */
+    /* ── METRICS ROW ─────────────────────────── */
     .metrics-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: var(--border-subtle);
-      border: 1px solid var(--border-subtle);
+      gap: 14px;
       margin-bottom: 20px;
     }
     .metric-block {
       background: var(--bg-surface);
-      padding: 16px 18px;
+      border: 1px solid var(--border-subtle);
+      padding: 14px 16px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      min-height: 86px;
     }
     .metric-tag {
       font-family: var(--font-mono);
-      font-size: 9.5px;
+      font-size: 10px;
       font-weight: 700;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
       color: var(--text-muted);
       display: flex;
       align-items: center;
@@ -412,83 +402,123 @@
     }
     .metric-val {
       font-family: var(--font-mono);
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 800;
       color: #FFF;
-      margin: 6px 0 2px;
-      letter-spacing: -0.5px;
+      line-height: 1.1;
+      margin: 4px 0 2px;
     }
     .metric-caption {
-      font-size: 10.5px;
+      font-family: var(--font-mono);
+      font-size: 10px;
       color: var(--text-muted);
     }
 
-    /* ── TOOLBAR ─────────────────────────────── */
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-      padding: 10px 14px;
+    /* ── PANELS & CONTAINERS ─────────────────── */
+    .page { display: none; padding: 24px; }
+    .page.active { display: block; }
+
+    .panel {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .panel-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .filter-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
     }
 
     .select, .input {
-      background: var(--bg-canvas);
+      background: var(--bg-surface-elevated);
       border: 1px solid var(--border-medium);
       color: var(--text-main);
       font-family: var(--font-display);
       font-size: 12.5px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       outline: none;
-      min-height: 38px;
     }
     .select:focus, .input:focus {
       border-color: var(--brand-orange);
+      box-shadow: 0 0 0 1px var(--brand-orange);
     }
 
-    /* ── OPPORTUNITY CARDS ───────────────────── */
-    .card-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+    /* ── CARD LIST & OPPORTUNITY CARDS ───────── */
+    .card-list { display: flex; flex-direction: column; gap: 12px; }
 
     .opp-item {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
-      transition: border-color 0.12s;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.15s ease;
     }
-    .opp-item:hover { border-color: var(--border-strong); }
+    .opp-item:hover { border-color: var(--border-medium); }
 
-    .opp-content { padding: 18px 20px; }
+    .opp-content { padding: 16px 18px; }
 
     .opp-header-line {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       flex-wrap: wrap;
     }
 
     .chip {
       font-family: var(--font-mono);
-      font-size: 10.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 10px;
+      font-weight: 800;
       padding: 2px 7px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
       border: 1px solid transparent;
       display: inline-flex;
       align-items: center;
       gap: 4px;
     }
     .chip-opp-high {
-      background: rgba(255, 69, 0, 0.15);
-      border-color: var(--brand-orange);
-      color: #FF5722;
+      background: var(--brand-orange-subtle);
+      border-color: var(--brand-orange-border);
+      color: var(--brand-orange);
     }
     .chip-opp-medium {
       background: var(--accent-amber-bg);
@@ -700,160 +730,97 @@
 
     /* Critic Scorecard */
     .critic-scorecard {
-      margin-top: 12px;
-      padding: 10px 12px;
-      background: var(--bg-surface-elevated);
+      background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
+      padding: 12px 14px;
+      margin-top: 12px;
     }
     .critic-header {
       font-family: var(--font-mono);
-      font-size: 10px;
+      font-size: 10.5px;
       font-weight: 700;
-      text-transform: uppercase;
       color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      margin-bottom: 6px;
     }
     .critic-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
-      gap: 6px;
-      text-align: center;
+      gap: 8px;
     }
     .critic-cell {
-      background: var(--bg-surface);
+      background: var(--bg-canvas);
       border: 1px solid var(--border-subtle);
-      padding: 5px;
+      padding: 6px 8px;
+      text-align: center;
     }
     .critic-val {
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 800;
       color: #FFF;
     }
     .critic-lbl {
       font-family: var(--font-mono);
       font-size: 8.5px;
-      text-transform: uppercase;
       color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 2px;
     }
 
-    /* ── FORM & PANELS ───────────────────────── */
-    .panel {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      padding: 20px;
-    }
-    .panel-header {
-      padding-bottom: 12px;
-      margin-bottom: 14px;
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .panel-title {
+    /* ── SAAS TRENDS & LEADERBOARD (PULSEPEEK) ── */
+    .trends-table {
+      width: 100%;
+      border-collapse: collapse;
       font-size: 13px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #FFF;
     }
-    .form-group { margin-bottom: 14px; }
-    .form-label {
-      display: block;
+    .trends-table th {
+      background: var(--bg-surface-elevated);
+      color: var(--text-muted);
       font-family: var(--font-mono);
       font-size: 10.5px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-secondary);
-      margin-bottom: 4px;
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-medium);
     }
-    .form-hint {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 3px;
+    .trends-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
     }
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
+    .sentiment-bar-track {
+      height: 6px;
+      background: var(--accent-red);
+      width: 120px;
+      display: flex;
+      overflow: hidden;
+    }
+    .sentiment-bar-pos {
+      background: var(--accent-green);
+      height: 100%;
     }
 
-    /* ── NATIVE MOBILE BOTTOM NAVIGATION BAR ── */
-    .mobile-bottom-bar {
-      display: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: var(--bottombar-height);
-      background: var(--bg-surface);
-      border-top: 1px solid var(--border-subtle);
-      z-index: 90;
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-    .bottom-bar-items {
-      display: flex;
-      height: 100%;
-      align-items: center;
-      justify-content: space-around;
-    }
-    .bottom-tab {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      text-decoration: none;
-      flex: 1;
-      height: 100%;
-      cursor: pointer;
-      position: relative;
-    }
-    .bottom-tab.active {
-      color: #FFF;
-    }
-    .bottom-tab.active .icon {
-      stroke: var(--brand-orange);
-    }
-    .bottom-badge {
-      position: absolute;
-      top: 6px;
-      right: 25%;
-      background: var(--brand-orange);
-      color: #FFF;
-      font-size: 9px;
-      padding: 1px 4px;
-      font-weight: 800;
-    }
-
-    /* ── MODAL ───────────────────────────────── */
+    /* ── MODALS ──────────────────────────────── */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(2px);
-      z-index: 200;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 1000;
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 20px;
     }
     .modal-overlay.open { display: flex; }
     .modal-container {
       background: var(--bg-surface);
       border: 1px solid var(--border-strong);
       width: 100%;
-      max-width: 540px;
+      max-width: 580px;
       max-height: 90vh;
       overflow-y: auto;
     }
@@ -872,6 +839,28 @@
       justify-content: flex-end;
       gap: 8px;
       background: rgba(0,0,0,0.2);
+    }
+
+    /* Form Elements */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 5px;
+    }
+    .form-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
     }
 
     /* ── TOAST ───────────────────────────────── */
@@ -932,6 +921,56 @@
     @keyframes shimmer {
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
+    }
+
+    /* ── MOBILE BOTTOM NAVIGATION BAR ────────── */
+    .mobile-bottom-bar {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(var(--bottombar-height) + env(safe-area-inset-bottom));
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-medium);
+      z-index: 90;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .bottom-tabs-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      height: var(--bottombar-height);
+    }
+    .bottom-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      text-decoration: none;
+      gap: 3px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+    }
+    .bottom-tab.active {
+      color: #FFF;
+      background: var(--brand-orange-subtle);
+    }
+    .bottom-tab.active .icon {
+      stroke: var(--brand-orange);
+    }
+    .bottom-tab-badge {
+      position: absolute;
+      top: 6px;
+      right: calc(50% - 16px);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 800;
+      background: var(--brand-orange);
+      color: #FFF;
+      padding: 0 4px;
     }
 
     /* ── MOBILE / TABLET RESPONSIVENESS ─────── */
@@ -1008,6 +1047,11 @@
       Opportunity Inbox
       <span class="nav-badge" id="opps-badge">0</span>
     </div>
+    <div class="nav-item" data-page="trends" onclick="navigate('trends'); toggleSidebar(false);">
+      <svg class="icon" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      SaaS Leaderboard
+      <span class="chip" style="background:var(--accent-green-bg);color:var(--accent-green);font-size:9px;padding:0 4px;">PULSE</span>
+    </div>
     <div class="nav-item" data-page="posts" onclick="navigate('posts'); toggleSidebar(false);">
       <svg class="icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
       Reddit Explorer
@@ -1071,9 +1115,13 @@
       </div>
     </div>
     <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="openAlertsCenterModal()" title="Live Notification Center">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        ALERTS
+      </button>
       <button class="btn btn-secondary btn-sm" id="pwa-install-btn" style="display:none;" onclick="installPWA()">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        INSTALL APP
+        INSTALL
       </button>
       <button class="btn btn-primary btn-sm" onclick="triggerCycle(this)">
         <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -1100,7 +1148,7 @@
           <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </div>
         <div class="metric-val" id="metric-buy-signals">0</div>
-        <div class="metric-caption">Purchase intent</div>
+        <div class="metric-caption">Intent Confirmed</div>
       </div>
       <div class="metric-block">
         <div class="metric-tag">
@@ -1108,48 +1156,113 @@
           <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </div>
         <div class="metric-val" id="metric-pain-points">0</div>
-        <div class="metric-caption">User bottlenecks</div>
+        <div class="metric-caption">Active Complaints</div>
       </div>
       <div class="metric-block">
         <div class="metric-tag">
-          RULES
-          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+          ACTIVE RULES
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         </div>
         <div class="metric-val" id="metric-rules">1</div>
-        <div class="metric-caption">Active tracking</div>
+        <div class="metric-caption">Tracking Rules</div>
       </div>
     </div>
 
-    <!-- Toolbar Filters -->
-    <div class="toolbar">
-      <select class="select" id="opp-filter-intent" onchange="loadOpportunities()">
-        <option value="">ALL INTENT SIGNALS</option>
-        <option value="buy-intent">BUY INTENT</option>
-        <option value="seeking-alternatives">SEEKING ALTERNATIVES</option>
-        <option value="pain-point">PAIN POINT</option>
-        <option value="question">TECHNICAL QUESTION</option>
-      </select>
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">Intent:</span>
+        <select class="select" id="opp-filter-intent" onchange="loadOpportunities()">
+          <option value="">All Intents</option>
+          <option value="buy-intent">Buying Intent</option>
+          <option value="pain-point">Pain Points</option>
+          <option value="seeking-alternatives">Seeking Alternatives</option>
+          <option value="question">General Questions</option>
+        </select>
+      </div>
 
-      <select class="select" id="opp-filter-min-score" onchange="loadOpportunities()">
-        <option value="">ALL SCORES</option>
-        <option value="75">SCORE ≥ 75</option>
-        <option value="50">SCORE ≥ 50</option>
-      </select>
+      <div class="filter-group">
+        <span class="filter-label">Min Score:</span>
+        <select class="select" id="opp-filter-min-score" onchange="loadOpportunities()">
+          <option value="">All Scores</option>
+          <option value="60">Score ≥ 60 (Medium+)</option>
+          <option value="75">Score ≥ 75 (High Priority)</option>
+          <option value="85">Score ≥ 85 (Urgent)</option>
+        </select>
+      </div>
 
-      <select class="select" id="opp-filter-status" onchange="loadOpportunities()">
-        <option value="">ALL STATUSES</option>
-        <option value="new">NEW</option>
-        <option value="saved">SAVED</option>
-        <option value="replied">REPLIED</option>
-      </select>
+      <div class="filter-group">
+        <span class="filter-label">Status:</span>
+        <select class="select" id="opp-filter-status" onchange="loadOpportunities()">
+          <option value="new">New Unreviewed</option>
+          <option value="saved">Saved Leads</option>
+          <option value="replied">Replied</option>
+          <option value="">All Statuses</option>
+        </select>
+      </div>
 
-      <button class="btn btn-ghost btn-sm" onclick="resetOppFilters()">RESET</button>
+      <div style="margin-left:auto;">
+        <button class="btn btn-ghost btn-sm" onclick="resetOppFilters()">RESET</button>
+      </div>
     </div>
 
-    <!-- Opportunities Feed -->
+    <!-- Opportunities Container -->
     <div id="opp-container" class="card-list">
       <div class="skeleton-box"></div>
       <div class="skeleton-box"></div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: SAAS TRENDS & LEADERBOARD (PULSEPEEK) ── -->
+  <div class="page" id="page-trends">
+    <div style="margin-bottom:16px;">
+      <h2 style="font-size:15px;font-weight:800;text-transform:uppercase;color:#FFF;">SAAS WINNING REDDIT RIGHT NOW</h2>
+      <p style="font-size:11.5px;color:var(--text-muted);">Real-time product sentiment, mention share of voice, and competitor churn detection</p>
+    </div>
+
+    <!-- Quick Tool Inspection -->
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-header"><span class="panel-title">INSPECT ANY SAAS PRODUCT ON REDDIT</span></div>
+      <div class="form-grid">
+        <input type="text" class="input" id="inspect-product-input" placeholder="Enter SaaS name (e.g. Supabase, Lemon Squeezy, Cursor, Zapier)..." />
+        <button class="btn btn-primary btn-sm" onclick="runProductInspection()">SCAN REDDIT SENTIMENT</button>
+      </div>
+      <div id="inspect-product-results" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-header">
+        <span class="panel-title">REDDIT SAAS LEADERBOARD</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadTrends()">REFRESH</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="trends-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>SAAS TOOL</th>
+              <th>MENTIONS</th>
+              <th>SENTIMENT RATIO</th>
+              <th>COMMUNITY VERDICT</th>
+              <th>TOP SUBREDDITS</th>
+            </tr>
+          </thead>
+          <tbody id="trends-leaderboard-body">
+            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">Loading SaaS leaderboard...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Market Gaps & Feature Requests -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">MARKET GAPS & UNMET DEMANDS (WHAT USERS ARE ASKING FOR)</span>
+      </div>
+      <div id="market-gaps-container" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px;">
+        <div class="skeleton-box"></div>
+      </div>
     </div>
   </div>
 
@@ -1187,7 +1300,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <div>
         <h2 style="font-size:15px;font-weight:800;text-transform:uppercase;color:#FFF;">MONITORING RULES</h2>
-        <p style="font-size:11.5px;color:var(--text-muted);">Target keywords and subreddit rules</p>
+        <p style="font-size:11.5px;color:var(--text-muted);">Target keywords and subreddit discovery rules</p>
       </div>
       <button class="btn btn-primary btn-sm" onclick="openCreateRuleModal()">+ CREATE RULE</button>
     </div>
@@ -1273,7 +1386,7 @@
 
       <!-- Alerts -->
       <div class="panel" style="margin-bottom:16px;">
-        <div class="panel-header"><span class="panel-title">ALERT CHANNELS (NTFY.SH & EMAIL)</span></div>
+        <div class="panel-header"><span class="panel-title">ALERT CHANNELS (NTFY.SH, EMAIL & WEBHOOK)</span></div>
         <div class="form-group">
           <label class="form-label">NTFY.SH TOPIC</label>
           <input type="text" class="input" id="setting-ntfy-topic" placeholder="e.g. my-redditplus-alerts" style="width:100%;" />
@@ -1283,9 +1396,15 @@
           <label class="form-label">EMAIL ADDRESS</label>
           <input type="email" class="input" id="setting-alert-email" placeholder="you@example.com" style="width:100%;" />
         </div>
-        <div style="display:flex;gap:8px;">
+        <div class="form-group">
+          <label class="form-label">WEBHOOK URL (DISCORD / SLACK / GENERIC)</label>
+          <input type="url" class="input" id="setting-alert-webhook" placeholder="https://discord.com/api/webhooks/..." style="width:100%;" />
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-primary btn-sm" onclick="saveAlertSettings()">SAVE ALERTS</button>
-          <button class="btn btn-secondary btn-sm" onclick="testPushNotification()">TEST ALERT</button>
+          <button class="btn btn-secondary btn-sm" onclick="testPushNotification('ntfy')">TEST PUSH</button>
+          <button class="btn btn-secondary btn-sm" onclick="testPushNotification('email')">TEST EMAIL</button>
+          <button class="btn btn-secondary btn-sm" onclick="testPushNotification('webhook')">TEST WEBHOOK</button>
         </div>
       </div>
 
@@ -1295,21 +1414,21 @@
         <div class="form-group">
           <label class="form-label">PROVIDER</label>
           <select class="select" id="setting-llm-provider" style="width:100%;">
-            <option value="opencode_zen">OpenCode Zen (Cloud)</option>
-            <option value="ollama">Ollama (Local)</option>
+            <option value="opencode_zen">OpenCode Zen (Cloud - DeepSeek / Free)</option>
+            <option value="ollama">Ollama (Local Offline)</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">MODEL</label>
-          <input type="text" class="input" id="setting-llm-model" value="deepseek-v4-flash-free" style="width:100%;" />
+          <label class="form-label">MODEL NAME</label>
+          <input type="text" class="input" id="setting-llm-model" placeholder="deepseek-v4-flash-free" style="width:100%;" />
         </div>
         <div class="form-group">
-          <label class="form-label">OPENCODE ZEN API KEY</label>
-          <input type="password" class="input" id="setting-zen-key" placeholder="sk-..." style="width:100%;" />
+          <label class="form-label">API KEY (OPTIONAL FOR ZEN)</label>
+          <input type="password" class="input" id="setting-zen-key" placeholder="Zen API key" style="width:100%;" />
         </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary btn-sm" onclick="saveLLMSettings()">SAVE AI CONFIG</button>
-          <button class="btn btn-secondary btn-sm" onclick="testAIConnectivity()">TEST CONNECTION</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn btn-primary btn-sm" onclick="saveLLMSettings()">SAVE AI PREFERENCES</button>
+          <button class="btn btn-secondary btn-sm" onclick="testAIConnectivity()">TEST CONNECTIVITY</button>
         </div>
         <div id="llm-test-status" style="margin-top:10px;"></div>
       </div>
@@ -1320,21 +1439,27 @@
   <div class="page" id="page-logs">
     <div class="panel">
       <div class="panel-header">
-        <span class="panel-title">SYSTEM ACTIVITY</span>
-        <button class="btn btn-secondary btn-sm" onclick="loadLogs()">REFRESH</button>
+        <span class="panel-title">SYSTEM INGESTION STREAM</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadLogs()">REFRESH</button>
       </div>
-      <div id="logs-container" style="font-family:var(--font-mono);font-size:11px;max-height:500px;overflow-y:auto;"></div>
+      <div id="logs-container" style="font-family:var(--font-mono);font-size:11.5px;max-height:600px;overflow-y:auto;">
+        <div class="skeleton-box"></div>
+      </div>
     </div>
   </div>
 </main>
 
-<!-- ── NATIVE MOBILE BOTTOM NAVIGATION BAR ───── -->
+<!-- ── MOBILE BOTTOM BAR ─────────────────────── -->
 <nav class="mobile-bottom-bar">
-  <div class="bottom-bar-items">
+  <div class="bottom-tabs-grid">
     <a class="bottom-tab active" data-tab="opportunities" onclick="navigate('opportunities')">
       <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3"/></svg>
       <span>INBOX</span>
-      <span class="bottom-badge" id="bottom-opps-badge">0</span>
+      <span class="bottom-tab-badge" id="bottom-opps-badge">0</span>
+    </a>
+    <a class="bottom-tab" data-tab="trends" onclick="navigate('trends')">
+      <svg class="icon" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      <span>SAAS</span>
     </a>
     <a class="bottom-tab" data-tab="posts" onclick="navigate('posts')">
       <svg class="icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
@@ -1344,16 +1469,36 @@
       <svg class="icon" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
       <span>RULES</span>
     </a>
-    <a class="bottom-tab" data-tab="settings" onclick="navigate('settings')">
-      <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span>SETTINGS</span>
-    </a>
     <a class="bottom-tab" onclick="toggleSidebar(true)">
       <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       <span>MORE</span>
     </a>
   </div>
 </nav>
+
+<!-- ── MODAL: ALERTS & NOTIFICATION CENTER ──── -->
+<div class="modal-overlay" id="modal-alerts-center">
+  <div class="modal-container">
+    <div class="modal-head">
+      <div style="font-size:13px;font-weight:800;text-transform:uppercase;color:#FFF;">LIVE ALERT & NOTIFICATION CENTER</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-alerts-center')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="testPushNotification('ntfy')">TEST PUSH (NTFY)</button>
+        <button class="btn btn-secondary btn-sm" onclick="testPushNotification('email')">TEST EMAIL</button>
+        <button class="btn btn-secondary btn-sm" onclick="testPushNotification('webhook')">TEST WEBHOOK</button>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">RECENT DISPATCHED ALERTS:</div>
+      <div id="alerts-center-list" style="max-height:350px;overflow-y:auto;font-size:12px;">
+        <div style="color:var(--text-muted);padding:10px;">Loading alerts...</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-alerts-center')">CLOSE</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── MODAL: CREATE RULE ────────────────────── -->
 <div class="modal-overlay" id="modal-rule">

@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────
-// REDDIT PLUS v2 — Mobile-First Precision Intelligence Platform
+// REDDIT PLUS v2 — Mobile-First Precision Intelligence & SaaS Engine
 // ─────────────────────────────────────────────────────────────────
 
 const API = '/api/v1';
@@ -78,7 +78,7 @@ async function api(path, options = {}) {
   return resp.json();
 }
 
-// ── NAVIGATION (DESKTOP & MOBILE TABS) ────────────────────────────
+// ── NAVIGATION ───────────────────────────────────────────────────
 function navigate(tab) {
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.bottom-tab').forEach(el => el.classList.remove('active'));
@@ -100,6 +100,7 @@ function navigate(tab) {
 
   const titles = {
     opportunities: ['OPPORTUNITY INBOX', 'HIGH-INTENT REDDIT CONVERSATIONS'],
+    trends: ['SAAS LEADERBOARD & TRENDS', 'PULSEPEEK SAAS INTELLIGENCE & MARKET GAPS'],
     posts: ['REDDIT EXPLORER', 'MONITORED REDDIT DISCUSSIONS & LIVE SEARCH'],
     monitoring: ['MONITORING RULES', 'KEYWORD FILTERS & DISCOVERY RULES'],
     subreddits: ['COMMUNITY PROFILES', 'CULTURAL PROFILES & PROMOTION NORMS'],
@@ -116,6 +117,7 @@ function navigate(tab) {
   if (subEl) subEl.textContent = sub;
 
   if (tab === 'opportunities') loadOpportunities();
+  if (tab === 'trends') loadTrends();
   if (tab === 'posts') loadPosts();
   if (tab === 'monitoring') loadMonitoringRules();
   if (tab === 'subreddits') loadSubreddits();
@@ -135,6 +137,7 @@ async function triggerCycle(btn) {
     toast(`Ingestion complete: ${r.posts_ingested} ingested, ${r.matches_found} matched`, 'success');
     await loadMetrics();
     if (currentTab === 'opportunities') await loadOpportunities();
+    if (currentTab === 'trends') await loadTrends();
     if (currentTab === 'posts') await loadPosts();
   } catch (e) {
     toast(`Ingestion cycle failed: ${e.message}`, 'error');
@@ -449,6 +452,112 @@ function resetOppFilters() {
   loadOpportunities();
 }
 
+// ── SAAS TRENDS & LEADERBOARD (PULSEPEEK) ────────────────────────
+async function loadTrends() {
+  const tbody = document.getElementById('trends-leaderboard-body');
+  const gapsContainer = document.getElementById('market-gaps-container');
+
+  try {
+    const [leaderboardRes, gapsRes] = await Promise.all([
+      api('/trends/leaderboard'),
+      api('/trends/market-gaps'),
+    ]);
+
+    const items = leaderboardRes.leaderboard || [];
+    if (!items.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">No SaaS mentions discovered yet. Run ingestion to scan.</td></tr>`;
+    } else {
+      tbody.innerHTML = items.map((t, idx) => `
+        <tr>
+          <td style="font-family:var(--font-mono);font-weight:800;color:var(--text-muted);">${idx + 1}</td>
+          <td>
+            <div style="font-weight:800;color:#FFF;font-size:14px;">${esc(t.name)}</div>
+          </td>
+          <td style="font-family:var(--font-mono);font-weight:700;color:var(--brand-orange);">
+            ${t.mentions} discussions
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="sentiment-bar-track" title="${t.positive_pct}% Positive vs ${t.critical_pct}% Critical">
+                <div class="sentiment-bar-pos" style="width:${t.positive_pct}%;"></div>
+              </div>
+              <span style="font-family:var(--font-mono);font-size:11px;color:var(--accent-green);font-weight:700;">${t.positive_pct}% POS</span>
+            </div>
+          </td>
+          <td>
+            <span class="chip" style="color:${esc(t.verdict_color)};border-color:${esc(t.verdict_color)};background:rgba(0,0,0,0.3);">
+              ${esc(t.verdict)}
+            </span>
+          </td>
+          <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);">
+            ${esc(t.top_subreddits?.join(', ') || 'r/SaaS')}
+          </td>
+        </tr>`).join('');
+    }
+
+    const gaps = gapsRes.gaps || [];
+    if (!gaps.length) {
+      gapsContainer.innerHTML = '<div style="color:var(--text-muted);padding:10px;">No market gaps detected yet.</div>';
+    } else {
+      gapsContainer.innerHTML = gaps.map(g => `
+        <div style="background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);padding:14px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+              <span class="chip chip-sub">r/${esc(g.subreddit)}</span>
+              <span class="chip chip-intent-pain">${esc(g.intent?.toUpperCase())}</span>
+              <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);margin-left:auto;">▲ ${g.score}</span>
+            </div>
+            <div style="font-weight:700;font-size:13.5px;color:#FFF;margin-bottom:6px;line-height:1.4;">
+              ${esc(g.title)}
+            </div>
+            <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px;">
+              <strong style="color:var(--brand-orange);">Problem:</strong> ${esc(g.problem)}
+            </div>
+          </div>
+          <div style="padding-top:8px;border-top:1px solid var(--border-subtle);font-size:11.5px;color:var(--accent-green);">
+            <strong>Opportunity:</strong> ${esc(g.opportunity)}
+          </div>
+        </div>`).join('');
+    }
+  } catch (e) {
+    toast(`Failed to load trends: ${e.message}`, 'error');
+  }
+}
+
+async function runProductInspection() {
+  const prod = document.getElementById('inspect-product-input').value.trim();
+  if (!prod) { toast('Enter SaaS product name', 'warning'); return; }
+
+  const out = document.getElementById('inspect-product-results');
+  out.innerHTML = '<div class="skeleton-box"></div>';
+
+  try {
+    const res = await api(`/trends/inspect/${encodeURIComponent(prod)}`);
+    if (!res.discussions || !res.discussions.length) {
+      out.innerHTML = `<div style="color:var(--text-muted);padding:10px;">No recent discussions found for "${esc(prod)}".</div>`;
+      return;
+    }
+    out.innerHTML = `
+      <div style="font-family:var(--font-mono);font-size:11.5px;color:var(--brand-orange);margin-bottom:8px;">
+        DISCOVERED ${res.count} ACTIVE REDDIT DISCUSSIONS ABOUT "${esc(prod)}":
+      </div>` +
+      res.discussions.map(d => {
+        const permalink = buildRedditUrl(d.permalink, d.subreddit, null);
+        return `
+        <div style="background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);padding:10px;margin-bottom:6px;">
+          <div style="display:flex;gap:6px;margin-bottom:3px;font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);">
+            <span style="color:var(--brand-orange);">r/${esc(d.subreddit)}</span> · ▲ ${d.score} · 💬 ${d.comments} comments
+          </div>
+          <div style="font-weight:700;font-size:13px;">
+            <a href="${esc(permalink)}" target="_blank" rel="noopener noreferrer" style="color:#FFF;text-decoration:none;">${esc(d.title)}</a>
+          </div>
+        </div>`;
+      }).join('');
+  } catch (e) {
+    out.innerHTML = `<div style="color:var(--accent-red);padding:10px;">Inspection failed: ${esc(e.message)}</div>`;
+  }
+}
+
 // ── REDDIT EXPLORER ──────────────────────────────────────────────
 async function loadPosts() {
   const c = document.getElementById('posts-container');
@@ -749,6 +858,45 @@ async function testCriticLab() {
   }
 }
 
+// ── ALERTS CENTER & NOTIFICATIONS ────────────────────────────────
+async function openAlertsCenterModal() {
+  document.getElementById('modal-alerts-center').classList.add('open');
+  const list = document.getElementById('alerts-center-list');
+  list.innerHTML = '<div style="color:var(--text-muted);padding:10px;">Loading alerts...</div>';
+  try {
+    const items = await api('/notifications');
+    if (!items.length) {
+      list.innerHTML = '<div style="color:var(--text-muted);padding:10px;">No alerts dispatched yet. Click test buttons above to verify.</div>';
+      return;
+    }
+    list.innerHTML = items.map(n => `
+      <div style="padding:8px 0;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div>
+          <div style="font-weight:700;color:#FFF;">${esc(n.title)}</div>
+          <div style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);">${esc(n.message)}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <span class="chip ${n.status === 'sent' ? 'chip-intent-buy' : 'chip-intent-pain'}">${esc(n.status.toUpperCase())}</span>
+          <div style="font-family:var(--font-mono);font-size:9.5px;color:var(--text-muted);margin-top:2px;">${esc(n.channel?.toUpperCase())} · ${timeAgo(n.delivered_at)}</div>
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    list.innerHTML = `<div style="color:var(--accent-red);padding:10px;">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function testPushNotification(channel = 'ntfy') {
+  try {
+    const res = await api(`/notifications/test-alert?channel=${channel}`, { method: 'POST' });
+    toast(`Test alert sent via ${channel.toUpperCase()} successfully!`, 'success');
+    if (document.getElementById('modal-alerts-center').classList.contains('open')) {
+      openAlertsCenterModal();
+    }
+  } catch (e) {
+    toast(`Alert dispatch failed: ${e.message}`, 'error');
+  }
+}
+
 // ── SETTINGS ─────────────────────────────────────────────────────
 async function loadSettings() {
   try {
@@ -764,6 +912,7 @@ async function loadSettings() {
 
     if (s.alerts?.ntfy_topic) document.getElementById('setting-ntfy-topic').value = s.alerts.ntfy_topic;
     if (s.alerts?.email) document.getElementById('setting-alert-email').value = s.alerts.email;
+    if (s.alerts?.webhook_url) document.getElementById('setting-alert-webhook').value = s.alerts.webhook_url;
     if (s.llm?.provider) document.getElementById('setting-llm-provider').value = s.llm.provider;
     if (s.llm?.model) document.getElementById('setting-llm-model').value = s.llm.model;
   } catch (e) {
@@ -789,23 +938,15 @@ async function saveRedditSettings() {
 async function saveAlertSettings() {
   const topic = document.getElementById('setting-ntfy-topic').value.trim();
   const email = document.getElementById('setting-alert-email').value.trim();
+  const webhook = document.getElementById('setting-alert-webhook').value.trim();
   try {
     await api('/settings/alerts', {
       method: 'PUT',
-      body: JSON.stringify({ ntfy_topic: topic, email: email || null }),
+      body: JSON.stringify({ ntfy_topic: topic, email: email || null, webhook_url: webhook || null }),
     });
     toast('Alert configuration saved', 'success');
   } catch (e) {
     toast(`Error: ${e.message}`, 'error');
-  }
-}
-
-async function testPushNotification() {
-  try {
-    await api('/notifications/test-alert?channel=ntfy', { method: 'POST' });
-    toast('Notification dispatched to ntfy topic', 'success');
-  } catch (e) {
-    toast(`Alert dispatch failed: ${e.message}`, 'error');
   }
 }
 

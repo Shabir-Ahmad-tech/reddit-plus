@@ -58,3 +58,26 @@ def test_settings_endpoint():
     assert "app" in data
     assert "llm" in data
     assert "alerts" in data
+
+
+def test_saas_trends_leaderboard_endpoint():
+    resp = client.get("/api/v1/trends/leaderboard")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "leaderboard" in data
+    assert len(data["leaderboard"]) > 0
+    first = data["leaderboard"][0]
+    assert "name" in first
+    assert "mentions" in first
+    assert "positive_pct" in first
+
+
+def test_saas_market_gaps_endpoint():
+    resp = client.get("/api/v1/trends/market-gaps")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "gaps" in data
+    assert len(data["gaps"]) > 0
+    first = data["gaps"][0]
+    assert "problem" in first
+    assert "opportunity" in first
