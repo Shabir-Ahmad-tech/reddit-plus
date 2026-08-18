@@ -53,7 +53,6 @@ def create_app() -> FastAPI:
     app.include_router(v1_router)
 
     # Legacy routes compatibility
-    # Map legacy stats and mentions endpoints to v1 endpoints for backwards compatibility
     from .legacy_compat import legacy_router
     app.include_router(legacy_router)
 
@@ -68,6 +67,14 @@ def create_app() -> FastAPI:
             if index_path.exists():
                 return FileResponse(str(index_path))
             return {"message": "Reddit Plus v2 API operational"}
+
+        @app.get("/manifest.json", include_in_schema=False)
+        async def serve_manifest():
+            return FileResponse(str(static_dir / "manifest.json"), media_type="application/manifest+json")
+
+        @app.get("/sw.js", include_in_schema=False)
+        async def serve_sw():
+            return FileResponse(str(static_dir / "sw.js"), media_type="application/javascript")
 
     return app
 

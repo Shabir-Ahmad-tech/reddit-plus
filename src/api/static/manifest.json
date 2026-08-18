@@ -1,0 +1,25 @@
+{
+  "name": "Reddit Plus — Opportunity Intelligence",
+  "short_name": "Reddit Plus",
+  "description": "High-intent Reddit opportunity intelligence & multi-strategy response assistant.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090B0E",
+  "theme_color": "#FF4500",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

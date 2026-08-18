@@ -1,9 +1,54 @@
 // ─────────────────────────────────────────────────────────────────
-// REDDIT PLUS v2 — Precision Opportunity Intelligence Platform
+// REDDIT PLUS v2 — Mobile-First Precision Intelligence Platform
 // ─────────────────────────────────────────────────────────────────
 
 const API = '/api/v1';
 let currentTab = 'opportunities';
+let deferredInstallPrompt = null;
+
+// ── PWA SERVICE WORKER & INSTALL PROMPT ──────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'inline-flex';
+});
+
+async function installPWA() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    if (outcome === 'accepted') {
+      toast('Reddit Plus installed successfully!', 'success');
+    }
+    deferredInstallPrompt = null;
+    const btn = document.getElementById('pwa-install-btn');
+    if (btn) btn.style.display = 'none';
+  } else {
+    toast('Tap browser menu (⋮) -> "Add to Home Screen" to install.', 'info');
+  }
+}
+
+// ── SIDEBAR DRAWER TOGGLE (MOBILE) ───────────────────────────────
+function toggleSidebar(open) {
+  const sidebar = document.getElementById('app-sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (sidebar && backdrop) {
+    if (open) {
+      sidebar.classList.add('open');
+      backdrop.classList.add('open');
+    } else {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('open');
+    }
+  }
+}
 
 // ── TOAST NOTIFICATIONS ──────────────────────────────────────────
 function toast(msg, type = 'info', duration = 4000) {
@@ -13,7 +58,7 @@ function toast(msg, type = 'info', duration = 4000) {
   t.className = `toast ${type}`;
   t.innerHTML = `
     <span style="flex:1;">${esc(msg)}</span>
-    <span style="cursor:pointer;opacity:0.6;font-family:var(--font-mono);font-size:11px;" onclick="this.parentElement.remove()">[DISMISS]</span>
+    <span style="cursor:pointer;opacity:0.6;font-family:var(--font-mono);font-size:11px;" onclick="this.parentElement.remove()">✕</span>
   `;
   tray.appendChild(t);
   setTimeout(() => t.remove(), duration);
@@ -33,33 +78,42 @@ async function api(path, options = {}) {
   return resp.json();
 }
 
-// ── NAVIGATION ───────────────────────────────────────────────────
+// ── NAVIGATION (DESKTOP & MOBILE TABS) ────────────────────────────
 function navigate(tab) {
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.bottom-tab').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
 
+  // Desktop nav
   const navEl = document.querySelector(`[data-page="${tab}"]`);
   if (navEl) navEl.classList.add('active');
 
+  // Mobile bottom tab
+  const bottomEl = document.querySelector(`[data-tab="${tab}"]`);
+  if (bottomEl) bottomEl.classList.add('active');
+
+  // Active page
   const pageEl = document.getElementById(`page-${tab}`);
   if (pageEl) pageEl.classList.add('active');
 
   currentTab = tab;
 
   const titles = {
-    opportunities: ['OPPORTUNITY INBOX', 'HIGH-INTENT REDDIT CONVERSATIONS EVALUATED BY CRITIC'],
-    posts: ['REDDIT EXPLORER', 'MONITORED REDDIT DISCUSSIONS & LIVE TARGETED SEARCH'],
-    monitoring: ['MONITORING RULES', 'KEYWORD FILTERS, THRESHOLDS & DISCOVERY RULES'],
-    subreddits: ['COMMUNITY PROFILES', 'SUBREDDIT CULTURAL PROFILES & PROMOTION TOLERANCE'],
-    competitors: ['COMPETITOR TRACKER', 'AUTOMATED RULES INTERCEPTING COMPETITOR COMPLAINTS'],
-    playground: ['AI & CRITIC LAB', 'TEST INTENT CLASSIFICATION AND EVALUATE DRAFTS'],
-    settings: ['ALERTS & SETTINGS', 'PUSH NOTIFICATIONS, SENDGRID & AI ENGINE SELECTION'],
-    logs: ['SYSTEM ACTIVITY STREAM', 'REAL-TIME DISPATCH AND INGESTION EVENT LOG'],
+    opportunities: ['OPPORTUNITY INBOX', 'HIGH-INTENT REDDIT CONVERSATIONS'],
+    posts: ['REDDIT EXPLORER', 'MONITORED REDDIT DISCUSSIONS & LIVE SEARCH'],
+    monitoring: ['MONITORING RULES', 'KEYWORD FILTERS & DISCOVERY RULES'],
+    subreddits: ['COMMUNITY PROFILES', 'CULTURAL PROFILES & PROMOTION NORMS'],
+    competitors: ['COMPETITOR TRACKER', 'COMPETITOR COMPLAINTS & ALTERNATIVES'],
+    playground: ['AI & CRITIC LAB', 'TEST INTENT & EVALUATE DRAFTS'],
+    settings: ['ALERTS & SETTINGS', 'PUSH NOTIFICATIONS & AI CONFIGURATION'],
+    logs: ['SYSTEM ACTIVITY STREAM', 'REAL-TIME INGESTION & DISPATCH LOG'],
   };
 
   const [t, sub] = titles[tab] || ['REDDIT PLUS', ''];
-  document.getElementById('topbar-title').textContent = t;
-  document.getElementById('topbar-subtitle').textContent = sub;
+  const titleEl = document.getElementById('topbar-title');
+  const subEl = document.getElementById('topbar-subtitle');
+  if (titleEl) titleEl.textContent = t;
+  if (subEl) subEl.textContent = sub;
 
   if (tab === 'opportunities') loadOpportunities();
   if (tab === 'posts') loadPosts();
@@ -70,15 +124,15 @@ function navigate(tab) {
   if (tab === 'logs') loadLogs();
 }
 
-// ── TRIGGER CYCLE ────────────────────────────────────────────────
+// ── TRIGGER INGESTION CYCLE ──────────────────────────────────────
 async function triggerCycle(btn) {
   const orig = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = `<svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> EXECUTING...`;
+  btn.innerHTML = `<svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> ...`;
   try {
     const res = await api('/dashboard/trigger-cycle', { method: 'POST' });
     const r = res.results || {};
-    toast(`Ingestion complete: ${r.posts_ingested} ingested, ${r.matches_found} matched, ${r.analyses_completed} analyzed`, 'success');
+    toast(`Ingestion complete: ${r.posts_ingested} ingested, ${r.matches_found} matched`, 'success');
     await loadMetrics();
     if (currentTab === 'opportunities') await loadOpportunities();
     if (currentTab === 'posts') await loadPosts();
@@ -97,6 +151,9 @@ async function loadMetrics() {
     const totalMatches = data.total_matches || data.high_opportunities || 0;
     document.getElementById('metric-high-opps').textContent = totalMatches;
     document.getElementById('opps-badge').textContent = totalMatches;
+    const bottomBadge = document.getElementById('bottom-opps-badge');
+    if (bottomBadge) bottomBadge.textContent = totalMatches;
+
     document.getElementById('metric-buy-signals').textContent = data.buy_signals || 0;
     document.getElementById('metric-pain-points').textContent = data.pain_points || 0;
     document.getElementById('metric-rules').textContent = data.active_rules || 1;
@@ -124,10 +181,10 @@ async function loadOpportunities() {
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-title">NO MATCHED OPPORTUNITIES FOUND</div>
-          <div class="empty-desc">No discussions match your active filters. Click 'Ingest & Analyze Now' to scan Reddit communities.</div>
+          <div class="empty-desc">No discussions match your active filters. Click 'Ingest Now' to scan Reddit communities.</div>
           <button class="btn btn-primary btn-sm" onclick="triggerCycle(this)">
             <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            INGEST & ANALYZE NOW
+            INGEST NOW
           </button>
         </div>`;
       return;
@@ -170,11 +227,11 @@ function renderOpportunityCard(opp) {
         <span class="chip ${scoreChipClass}">SCORE ${score}/100</span>
         <a href="https://reddit.com/r/${esc(post.subreddit || 'all')}" target="_blank" rel="noopener" class="chip chip-sub">r/${esc(post.subreddit || 'all')}</a>
         <span class="chip ${intentChipClass}">${intent.replace('-', ' ').toUpperCase()}</span>
-        <span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);">· u/${esc(post.author || 'user')} · ${age}</span>
-        <div style="margin-left:auto;display:flex;gap:8px;">
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">· u/${esc(post.author || 'user')} · ${age}</span>
+        <div style="margin-left:auto;display:flex;gap:6px;">
           <button class="btn btn-secondary btn-sm" id="btn-toggle-${opp.id}" onclick="toggleOppDrawer(${opp.id})">
             <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
-            DEEP INTEL & REPLY
+            INTEL & REPLY
           </button>
           <button class="btn btn-ghost btn-sm" onclick="setOppStatus(${opp.id}, 'saved')">
             SAVE
@@ -198,12 +255,11 @@ function renderOpportunityCard(opp) {
           <span class="stat-highlight">▲ ${post.score || 1}</span>
           <span>💬 ${post.num_comments || 0} COMMENTS</span>
           <span>${Math.round((post.upvote_ratio || 1.0) * 100)}% UPVOTED</span>
-          <span>RULE: ${esc(opp.rule_name || 'GENERAL')}</span>
         </div>
         <div>
           <a href="${esc(permalink)}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm">
             <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            OPEN ON REDDIT
+            REDDIT
           </a>
         </div>
       </div>
@@ -229,7 +285,7 @@ function renderOpportunityCard(opp) {
         </div>
         <div class="drawer-metric-card">
           <div class="drawer-metric-label">ACTION VERDICT</div>
-          <div class="drawer-metric-val" style="color:var(--brand-orange);font-size:14px;padding-top:2px;">
+          <div class="drawer-metric-val" style="color:var(--brand-orange);font-size:13px;padding-top:2px;">
             ${opp.opportunity?.recommended_action || 'REPLY WITH VALUE'}
           </div>
         </div>
@@ -257,30 +313,30 @@ function renderOpportunityCard(opp) {
             <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
             AI MULTI-STRATEGY REPLY
           </div>
-          <div style="display:flex;gap:8px;">
-            <select class="select" id="strategy-sel-${opp.id}" style="padding:4px 8px;font-size:11px;">
+          <div style="display:flex;gap:6px;">
+            <select class="select" id="strategy-sel-${opp.id}" style="padding:3px 6px;font-size:11px;min-height:30px;">
               <option value="DIRECT_ANSWER">DIRECT ANSWER</option>
               <option value="VALUE_FIRST">VALUE FIRST</option>
-              <option value="TECHNICAL">TECHNICAL DEEP-DIVE</option>
-              <option value="PERSONAL_EXPERIENCE">PERSONAL EXPERIENCE</option>
-              <option value="COMPARISON">TOOL COMPARISON</option>
-              <option value="NO_PROMOTION">NO PROMOTION (PURE HELP)</option>
+              <option value="TECHNICAL">TECHNICAL</option>
+              <option value="PERSONAL_EXPERIENCE">EXPERIENCE</option>
+              <option value="COMPARISON">COMPARISON</option>
+              <option value="NO_PROMOTION">NO PROMOTION</option>
             </select>
             <button class="btn btn-secondary btn-sm" onclick="regenerateOppReply(${opp.id})">
               <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-              REGENERATE
+              DRAFT
             </button>
           </div>
         </div>
-        <textarea class="reply-textarea" id="reply-text-${opp.id}" placeholder="AI is drafting your response...">${esc(defaultDraft)}</textarea>
+        <textarea class="reply-textarea" id="reply-text-${opp.id}" placeholder="AI is drafting response...">${esc(defaultDraft)}</textarea>
         <div class="reply-actions">
           <button class="btn btn-primary btn-sm" id="btn-copy-${opp.id}" onclick="copyReplyText(${opp.id})">
             <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            COPY DRAFT
+            COPY
           </button>
           <a href="${esc(permalink)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" onclick="setOppStatus(${opp.id}, 'replied')">
             <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            OPEN REDDIT & REPLY
+            REPLY ON REDDIT
           </a>
           <button class="btn btn-ghost btn-sm" onclick="setOppStatus(${opp.id}, 'ignored')">ARCHIVE</button>
         </div>
@@ -299,16 +355,16 @@ function renderCriticScorecard(c) {
   return `
   <div class="critic-scorecard">
     <div class="critic-header">
-      <span>CRITIC EVALUATION SCORECARD</span>
+      <span>CRITIC SCORECARD</span>
       <span style="color:${isApproved ? 'var(--accent-green)' : 'var(--accent-red)'};font-weight:800;">
-        VERDICT: ${esc(c.verdict || (isApproved ? 'APPROVED' : 'REVISE'))}
+        ${esc(c.verdict || (isApproved ? 'APPROVED' : 'REVISE'))}
       </span>
     </div>
     <div class="critic-grid">
-      <div class="critic-cell"><div class="critic-val">${c.authenticity || 90}%</div><div class="critic-lbl">AUTHENTICITY</div></div>
-      <div class="critic-cell"><div class="critic-val">${c.relevance || 95}%</div><div class="critic-lbl">RELEVANCE</div></div>
-      <div class="critic-cell"><div class="critic-val">${c.helpfulness || 88}%</div><div class="critic-lbl">HELPFULNESS</div></div>
-      <div class="critic-cell"><div class="critic-val">${c.community_fit || 90}%</div><div class="critic-lbl">COMMUNITY FIT</div></div>
+      <div class="critic-cell"><div class="critic-val">${c.authenticity || 90}%</div><div class="critic-lbl">AUTHENTIC</div></div>
+      <div class="critic-cell"><div class="critic-val">${c.relevance || 95}%</div><div class="critic-lbl">RELEVANT</div></div>
+      <div class="critic-cell"><div class="critic-val">${c.helpfulness || 88}%</div><div class="critic-lbl">HELPFUL</div></div>
+      <div class="critic-cell"><div class="critic-val">${c.community_fit || 90}%</div><div class="critic-lbl">FIT</div></div>
       <div class="critic-cell"><div class="critic-val" style="color:${c.promotion_risk > 50 ? 'var(--accent-red)' : 'var(--accent-green)'};">${c.promotion_risk || 10}%</div><div class="critic-lbl">PROMO RISK</div></div>
       <div class="critic-cell"><div class="critic-val">${c.hallucination_risk || 5}%</div><div class="critic-lbl">HALLUCINATION</div></div>
     </div>
@@ -322,14 +378,13 @@ function toggleOppDrawer(id) {
     d.classList.toggle('open');
     if (btn) {
       if (d.classList.contains('open')) {
-        btn.innerHTML = `<svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg> COLLAPSE INTEL`;
-        // Auto-generate reply if text area is empty
+        btn.innerHTML = `<svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg> COLLAPSE`;
         const textarea = document.getElementById(`reply-text-${id}`);
         if (textarea && (!textarea.value || textarea.value.trim() === '')) {
           regenerateOppReply(id);
         }
       } else {
-        btn.innerHTML = `<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg> DEEP INTEL & REPLY`;
+        btn.innerHTML = `<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg> INTEL & REPLY`;
       }
     }
   }
@@ -411,12 +466,12 @@ async function loadPosts() {
     c.innerHTML = items.map(p => {
       const permalink = buildRedditUrl(p.permalink || p.url, p.subreddit, p.reddit_id);
       return `
-      <div style="padding:14px 0;border-bottom:1px solid var(--border-subtle);">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <div style="padding:12px 0;border-bottom:1px solid var(--border-subtle);">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
           <span class="chip chip-sub">r/${esc(p.subreddit)}</span>
-          <span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);">u/${esc(p.author)} · ▲ ${p.score} · 💬 ${p.num_comments}</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">u/${esc(p.author)} · ▲ ${p.score} · 💬 ${p.num_comments}</span>
         </div>
-        <div style="font-weight:700;font-size:14.5px;">
+        <div style="font-weight:700;font-size:14px;">
           <a href="${esc(permalink)}" target="_blank" rel="noopener noreferrer" style="color:#FFF;text-decoration:none;">${esc(p.title)}</a>
         </div>
       </div>`;
@@ -440,21 +495,21 @@ async function runLiveSearch() {
       body: JSON.stringify({ query: q, subreddit: sub, limit: 10 }),
     });
     if (!res.items || !res.items.length) {
-      out.innerHTML = `<div style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);padding:10px;">No discussions found for "${esc(q)}". Try different keywords or set up a free Reddit API app in Settings for unlimited live search.</div>`;
+      out.innerHTML = `<div style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);padding:10px;">No discussions found for "${esc(q)}". Try different keywords.</div>`;
       return;
     }
     out.innerHTML = `
-      <div style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);margin-bottom:12px;">FOUND ${res.count} RESULTS FOR "${esc(q)}":</div>` +
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:10px;">FOUND ${res.count} RESULTS FOR "${esc(q)}":</div>` +
       res.items.map(i => {
         const permalink = buildRedditUrl(i.permalink, i.subreddit, i.reddit_id);
         return `
-        <div style="padding:12px;background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);margin-bottom:8px;">
-          <div style="font-family:var(--font-mono);font-size:11px;color:var(--brand-orange);margin-bottom:4px;">r/${esc(i.subreddit)} · ▲ ${i.score}</div>
-          <div style="font-weight:700;font-size:14px;"><a href="${esc(permalink)}" target="_blank" rel="noopener noreferrer" style="color:#FFF;text-decoration:none;">${esc(i.title)}</a></div>
+        <div style="padding:10px;background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);margin-bottom:6px;">
+          <div style="font-family:var(--font-mono);font-size:10.5px;color:var(--brand-orange);margin-bottom:3px;">r/${esc(i.subreddit)} · ▲ ${i.score}</div>
+          <div style="font-weight:700;font-size:13.5px;"><a href="${esc(permalink)}" target="_blank" rel="noopener noreferrer" style="color:#FFF;text-decoration:none;">${esc(i.title)}</a></div>
         </div>`;
       }).join('');
   } catch (e) {
-    out.innerHTML = `<div style="color:var(--accent-red);font-size:13px;padding:12px;">Search failed: ${esc(e.message)}</div>`;
+    out.innerHTML = `<div style="color:var(--accent-red);font-size:12px;padding:10px;">Search failed: ${esc(e.message)}</div>`;
   }
 }
 
@@ -473,11 +528,11 @@ async function loadMonitoringRules() {
       return;
     }
     c.innerHTML = rules.map(r => `
-      <div style="background:var(--bg-surface);border:1px solid var(--border-subtle);padding:18px 22px;margin-bottom:12px;display:flex;align-items:center;gap:18px;">
-        <div style="flex:1;">
-          <div style="font-size:15px;font-weight:800;color:#FFF;letter-spacing:-0.2px;">${esc(r.name)}</div>
-          <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-top:4px;">
-            KEYWORDS: <strong style="color:var(--text-main);">${esc(r.keywords?.join(', ') || 'None')}</strong> · SUBREDDITS: <strong style="color:var(--text-main);">${esc(r.subreddits?.join(', ') || 'All')}</strong>
+      <div style="background:var(--bg-surface);border:1px solid var(--border-subtle);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <div style="font-size:14px;font-weight:800;color:#FFF;">${esc(r.name)}</div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:3px;">
+            KEYWORDS: <strong style="color:var(--text-main);">${esc(r.keywords?.join(', ') || 'None')}</strong> · SUBS: <strong style="color:var(--text-main);">${esc(r.subreddits?.join(', ') || 'All')}</strong>
           </div>
         </div>
         <span class="chip ${r.is_active ? 'chip-intent-buy' : 'chip-intent'}">${r.is_active ? 'ACTIVE' : 'PAUSED'}</span>
@@ -503,7 +558,7 @@ async function expandKeywordsForRule() {
   if (!seed) { toast('Enter a seed keyword first', 'warning'); return; }
 
   const box = document.getElementById('rule-keyword-suggestions');
-  box.innerHTML = '<span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">Generating related keyword clusters...</span>';
+  box.innerHTML = '<span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">Expanding...</span>';
 
   try {
     const res = await api('/monitoring-rules/expand-keywords', {
@@ -532,8 +587,6 @@ async function submitMonitoringRule() {
   const name = document.getElementById('rule-name').value.trim();
   const kws = document.getElementById('rule-keywords').value.split(',').map(s => s.trim()).filter(Boolean);
   const subs = document.getElementById('rule-subreddits').value.split(',').map(s => s.trim()).filter(Boolean);
-  const minScore = parseInt(document.getElementById('rule-min-score').value) || 1;
-  const minOpp = parseInt(document.getElementById('rule-min-opp').value) || 60;
 
   if (!name) { toast('Enter rule name', 'warning'); return; }
 
@@ -544,8 +597,8 @@ async function submitMonitoringRule() {
         name,
         keywords: kws,
         subreddits: subs,
-        min_score: minScore,
-        min_opportunity_score: minOpp,
+        min_score: 1,
+        min_opportunity_score: 60,
       }),
     });
     toast('Monitoring rule established', 'success');
@@ -588,12 +641,12 @@ async function loadSubreddits() {
   try {
     const subs = await api('/subreddits');
     c.innerHTML = subs.map(s => `
-      <div style="background:var(--bg-surface);border:1px solid var(--border-subtle);padding:18px;">
-        <div style="font-size:15px;font-weight:800;color:var(--brand-orange);margin-bottom:2px;">r/${esc(s.name)}</div>
-        <div style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);margin-bottom:12px;">${(s.subscribers || 0).toLocaleString()} SUBSCRIBERS</div>
-        <div style="font-family:var(--font-mono);font-size:11.5px;line-height:1.6;color:var(--text-secondary);">
-          <div>PROMOTION TOLERANCE: <strong style="color:#FFF;">${Math.round((s.profile?.promotion_tolerance || 0.5) * 100)}%</strong></div>
-          <div>CULTURAL STYLE: <strong style="color:#FFF;">${esc(s.profile?.reply_style || 'Direct').toUpperCase()}</strong></div>
+      <div style="background:var(--bg-surface);border:1px solid var(--border-subtle);padding:14px;">
+        <div style="font-size:14px;font-weight:800;color:var(--brand-orange);margin-bottom:2px;">r/${esc(s.name)}</div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:8px;">${(s.subscribers || 0).toLocaleString()} SUBSCRIBERS</div>
+        <div style="font-family:var(--font-mono);font-size:11px;line-height:1.5;color:var(--text-secondary);">
+          <div>PROMOTION: <strong style="color:#FFF;">${Math.round((s.profile?.promotion_tolerance || 0.5) * 100)}%</strong></div>
+          <div>STYLE: <strong style="color:#FFF;">${esc(s.profile?.reply_style || 'Direct').toUpperCase()}</strong></div>
         </div>
       </div>`).join('');
   } catch (e) {
@@ -619,17 +672,16 @@ async function loadCompetitors() {
         <div class="empty-state">
           <div class="empty-title">NO TRACKED COMPETITORS</div>
           <div class="empty-desc">Track competitors to automatically discover user complaints and migration intent.</div>
-          <button class="btn btn-primary btn-sm" onclick="openAddCompetitorModal()">+ TRACK COMPETITOR</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddCompetitorModal()">+ TRACK</button>
         </div>`;
       return;
     }
     c.innerHTML = comps.map(comp => `
-      <div style="background:var(--bg-surface);border:1px solid var(--border-subtle);padding:18px 22px;margin-bottom:12px;">
+      <div style="background:var(--bg-surface);border:1px solid var(--border-subtle);padding:14px;margin-bottom:8px;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-size:16px;font-weight:800;color:#FFF;">${esc(comp.name)}</div>
+          <div style="font-size:15px;font-weight:800;color:#FFF;">${esc(comp.name)}</div>
           <button class="btn btn-ghost btn-sm" onclick="deleteCompetitor(${comp.id})">DELETE</button>
         </div>
-        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:6px;">AUTO-MONITORED PHRASES:</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
           ${(comp.tracked_keywords || []).map(k => `<span class="reason-badge">${esc(k)}</span>`).join('')}
         </div>
@@ -640,11 +692,11 @@ async function loadCompetitors() {
 }
 
 async function openAddCompetitorModal() {
-  const name = prompt('Enter competitor brand name (e.g. Zapier, HubSpot, Notion):');
+  const name = prompt('Enter competitor name (e.g. Zapier, HubSpot):');
   if (!name) return;
   try {
     await api('/competitors', { method: 'POST', body: JSON.stringify({ name: name.trim() }) });
-    toast(`Competitor ${name} tracked with automated rule creation`, 'success');
+    toast(`Competitor ${name} tracked`, 'success');
     loadCompetitors();
     loadMetrics();
   } catch (e) {
@@ -668,15 +720,15 @@ async function testIntentLab() {
   const text = document.getElementById('test-intent-text').value.trim();
   if (!text) { toast('Enter post text first', 'warning'); return; }
   const out = document.getElementById('test-intent-out');
-  out.innerHTML = '<span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);">Classifying intent...</span>';
+  out.innerHTML = '<span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">Classifying...</span>';
   try {
     const res = await api('/settings/test-llm', { method: 'POST' });
     out.innerHTML = `
-      <div style="padding:10px;background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);font-family:var(--font-mono);font-size:12px;">
+      <div style="padding:8px;background:var(--bg-surface-elevated);border:1px solid var(--border-subtle);font-family:var(--font-mono);font-size:11.5px;">
         <span style="color:var(--accent-green);font-weight:700;">AI STATUS: ONLINE</span> · MODEL: ${res.model}
       </div>`;
   } catch (e) {
-    out.innerHTML = `<div style="color:var(--accent-red);font-size:12px;">Error: ${esc(e.message)}</div>`;
+    out.innerHTML = `<div style="color:var(--accent-red);font-size:11.5px;">Error: ${esc(e.message)}</div>`;
   }
 }
 
@@ -685,7 +737,7 @@ async function testCriticLab() {
   const reply = document.getElementById('test-critic-reply').value.trim();
   if (!reply) { toast('Enter draft reply text', 'warning'); return; }
   const out = document.getElementById('test-critic-out');
-  out.innerHTML = '<span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);">Running Critic inspection...</span>';
+  out.innerHTML = '<span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">Running Critic...</span>';
   try {
     const res = await api('/replies/critic', {
       method: 'POST',
@@ -693,7 +745,7 @@ async function testCriticLab() {
     });
     out.innerHTML = renderCriticScorecard(res);
   } catch (e) {
-    out.innerHTML = `<div style="color:var(--accent-red);font-size:12px;">Error: ${esc(e.message)}</div>`;
+    out.innerHTML = `<div style="color:var(--accent-red);font-size:11.5px;">Error: ${esc(e.message)}</div>`;
   }
 }
 
@@ -712,7 +764,6 @@ async function loadSettings() {
 
     if (s.alerts?.ntfy_topic) document.getElementById('setting-ntfy-topic').value = s.alerts.ntfy_topic;
     if (s.alerts?.email) document.getElementById('setting-alert-email').value = s.alerts.email;
-    if (s.alerts?.min_opportunity_score) document.getElementById('setting-min-opp-score').value = s.alerts.min_opportunity_score;
     if (s.llm?.provider) document.getElementById('setting-llm-provider').value = s.llm.provider;
     if (s.llm?.model) document.getElementById('setting-llm-model').value = s.llm.model;
   } catch (e) {
@@ -738,11 +789,10 @@ async function saveRedditSettings() {
 async function saveAlertSettings() {
   const topic = document.getElementById('setting-ntfy-topic').value.trim();
   const email = document.getElementById('setting-alert-email').value.trim();
-  const minOpp = parseInt(document.getElementById('setting-min-opp-score').value) || 70;
   try {
     await api('/settings/alerts', {
       method: 'PUT',
-      body: JSON.stringify({ ntfy_topic: topic, email: email || null, min_opportunity_score: minOpp }),
+      body: JSON.stringify({ ntfy_topic: topic, email: email || null }),
     });
     toast('Alert configuration saved', 'success');
   } catch (e) {
@@ -768,7 +818,7 @@ async function saveLLMSettings() {
       method: 'PUT',
       body: JSON.stringify({ provider, model, api_key: apiKey || null }),
     });
-    toast('AI backend preferences saved', 'success');
+    toast('AI preferences saved', 'success');
   } catch (e) {
     toast(`Error: ${e.message}`, 'error');
   }
@@ -776,16 +826,16 @@ async function saveLLMSettings() {
 
 async function testAIConnectivity() {
   const out = document.getElementById('llm-test-status');
-  out.innerHTML = '<span style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);">Testing connection...</span>';
+  out.innerHTML = '<span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">Testing...</span>';
   try {
     const res = await api('/settings/test-llm', { method: 'POST' });
     if (res.healthy) {
-      out.innerHTML = `<div style="font-family:var(--font-mono);font-size:12px;color:var(--accent-green);">ONLINE · PROVIDER: ${res.provider} · MODEL: ${res.model}</div>`;
+      out.innerHTML = `<div style="font-family:var(--font-mono);font-size:11.5px;color:var(--accent-green);">ONLINE · PROVIDER: ${res.provider} · MODEL: ${res.model}</div>`;
     } else {
-      out.innerHTML = `<div style="font-family:var(--font-mono);font-size:12px;color:var(--accent-red);">OFFLINE: ${esc(res.error)}</div>`;
+      out.innerHTML = `<div style="font-family:var(--font-mono);font-size:11.5px;color:var(--accent-red);">OFFLINE: ${esc(res.error)}</div>`;
     }
   } catch (e) {
-    out.innerHTML = `<div style="font-family:var(--font-mono);font-size:12px;color:var(--accent-red);">${esc(e.message)}</div>`;
+    out.innerHTML = `<div style="font-family:var(--font-mono);font-size:11.5px;color:var(--accent-red);">${esc(e.message)}</div>`;
   }
 }
 
@@ -795,16 +845,16 @@ async function loadLogs() {
   try {
     const logs = await api('/dashboard/logs');
     if (!logs.length) {
-      c.innerHTML = '<div style="color:var(--text-muted);padding:12px;">No activity logged yet.</div>';
+      c.innerHTML = '<div style="color:var(--text-muted);padding:10px;">No activity logged yet.</div>';
       return;
     }
     c.innerHTML = logs.reverse().map(l => {
       const lvlColor = l.level === 'error' ? 'var(--accent-red)' : l.level === 'warning' ? 'var(--accent-amber)' : 'var(--accent-green)';
       const time = l.timestamp ? l.timestamp.split('T')[1].split('.')[0] : '--:--:--';
       return `
-      <div style="padding:6px 0;border-bottom:1px solid var(--border-subtle);display:flex;gap:10px;">
+      <div style="padding:5px 0;border-bottom:1px solid var(--border-subtle);display:flex;gap:8px;">
         <span style="color:var(--text-muted);">${time}</span>
-        <span style="font-weight:700;color:${lvlColor};min-width:65px;">[${l.level.toUpperCase()}]</span>
+        <span style="font-weight:700;color:${lvlColor};min-width:60px;">[${l.level.toUpperCase()}]</span>
         <span style="color:var(--text-main);">${esc(l.message)}</span>
       </div>`;
     }).join('');
