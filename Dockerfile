@@ -23,5 +23,7 @@ RUN mkdir -p /app/data
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Default command
-CMD ["python", "-m", "src.main", "start"]
+EXPOSE 8000
+
+# Default command launches UI and background ingestion
+CMD ["python", "-m", "src.main", "ui", "--host", "0.0.0.0", "--port", "8000"]

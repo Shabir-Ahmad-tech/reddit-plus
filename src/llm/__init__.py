@@ -1,37 +1,38 @@
-from .client import OllamaClient, get_ollama_client, OpenCodeZenClient, UnifiedLLMClient, get_llm_client
-from .prompts import build_intent_prompt, build_reply_prompt, build_deep_analysis_prompt, parse_intent_response, VALID_INTENT_TAGS
-from .classifier import (
+"""
+LLM / AI compatibility package pointing to src.intelligence and src.replies.
+"""
+
+from src.intelligence import (
+    AIRouter,
+    get_ai_router,
     IntentClassifier,
-    ReplyGenerator,
-    PostAnalyzer,
-    LLMPipeline,
     IntentResult,
-    ReplyResult,
-    PostAnalysisResult,
-    classify_intent,
-    generate_reply,
-    analyze_post,
+    VALID_INTENT_TAGS,
+    PostAnalyzer,
+    DeepAnalysisResult,
+    OpportunityScorer,
+    OpportunityScoreBreakdown,
+    KeywordExpander,
 )
+from src.replies import ReplyGenerator, GeneratedReplyResult, ReplyCritic, CriticEvaluation
+
+# Aliases
+get_llm_client = get_ai_router
 
 __all__ = [
-    "OllamaClient",
-    "get_ollama_client",
-    "OpenCodeZenClient",
-    "UnifiedLLMClient",
+    "AIRouter",
+    "get_ai_router",
     "get_llm_client",
-    "build_intent_prompt",
-    "build_reply_prompt",
-    "build_deep_analysis_prompt",
-    "parse_intent_response",
-    "VALID_INTENT_TAGS",
     "IntentClassifier",
-    "ReplyGenerator",
-    "PostAnalyzer",
-    "LLMPipeline",
     "IntentResult",
-    "ReplyResult",
-    "PostAnalysisResult",
-    "classify_intent",
-    "generate_reply",
-    "analyze_post",
+    "VALID_INTENT_TAGS",
+    "PostAnalyzer",
+    "DeepAnalysisResult",
+    "OpportunityScorer",
+    "OpportunityScoreBreakdown",
+    "KeywordExpander",
+    "ReplyGenerator",
+    "GeneratedReplyResult",
+    "ReplyCritic",
+    "CriticEvaluation",
 ]

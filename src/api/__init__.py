@@ -1,3 +1,7 @@
-from .app import app, create_app
+"""
+API package entrypoint.
+"""
+
+from .main import app, create_app
 
 __all__ = ["app", "create_app"]

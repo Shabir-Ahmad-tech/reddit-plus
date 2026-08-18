@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Initialize database tables."""
+"""Initialize database tables for Reddit Plus v2."""
 import sys
 from pathlib import Path
 
@@ -11,9 +11,9 @@ from src.database import init_db
 from src.config import settings
 
 def main():
-    print(f"Initializing database at: {settings.app.database_path}")
+    print(f"Initializing database at: {settings.database.url}")
     init_db()
-    print("✅ Database tables created successfully")
+    print("✅ Reddit Plus v2 database initialized successfully.")
 
 if __name__ == "__main__":
     main()

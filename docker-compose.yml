@@ -1,36 +1,24 @@
 version: '3.8'
 
 services:
-  ollama:
-    image: ollama/ollama:latest
-    container_name: parsestream-ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    restart: unless-stopped
-    # Pull model on startup
-    command: >
-      sh -c "ollama serve & sleep 5 && ollama pull llama3.1:8b && wait"
-
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: parsestream-app
-    depends_on:
-      - ollama
+    container_name: redditplus-app
+    ports:
+      - "8000:8000"
     environment:
-      - OLLAMA_HOST=http://ollama:11434
+      - APP_ENV=production
       - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}
       - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}
-      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - OPENCODE_ZEN_API_KEY=${OPENCODE_ZEN_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER:-opencode_zen}
+      - LLM_MODEL=${LLM_MODEL:-deepseek-v4-flash-free}
       - NTFY_TOPIC=${NTFY_TOPIC}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - DATABASE_URL=sqlite:///data/reddit_plus.db
     volumes:
       - ./data:/app/data
       - ./config.yaml:/app/config.yaml:ro
     restart: unless-stopped
-    command: python -m src.main start
-
-volumes:
-  ollama_data:

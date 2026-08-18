@@ -1,93 +1,85 @@
+"""
+Webhook Alert Sender for Discord, Slack, and generic webhooks in Reddit Plus v2.
+"""
+
 import logging
-from typing import Optional, List, Tuple
+from typing import Optional, List, Dict, Any
 import httpx
 
-from src.database.models import Mention, IntentTag, Reply
+from src.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 class WebhookAlertSender:
     def __init__(self, webhook_url: Optional[str] = None):
-        self.webhook_url = webhook_url or ""
-        self.client = httpx.AsyncClient(timeout=15.0)
+        self.webhook_url = webhook_url or settings.alerts.webhook_url or ""
+        self._client: Optional[httpx.AsyncClient] = None
+
+    async def get_client(self) -> httpx.AsyncClient:
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(timeout=15.0)
+        return self._client
 
     def is_configured(self) -> bool:
         return bool(self.webhook_url and self.webhook_url.startswith("http"))
 
-    async def send_immediate_alert(
+    async def send(
         self,
-        mention: Mention,
-        intent_tags: List[IntentTag],
-        reply: Optional[Reply] = None,
+        title: str,
+        message: str,
+        url: Optional[str] = None,
+        subreddit: Optional[str] = None,
+        opportunity_score: Optional[int] = None,
     ) -> bool:
         """Send alert to Discord, Slack, or generic webhook."""
         if not self.is_configured():
             return False
 
-        tags_str = ", ".join([f"{t.tag} ({t.confidence}%)" for t in intent_tags])
-        title = f"[{mention.source.upper()}] {tags_str}"
+        client = await self.get_client()
 
-        # Discord webhook format
         if "discord.com" in self.webhook_url:
-            color = 0x22C55E if any(t.tag == "buy-intent" for t in intent_tags) else 0x3B82F6
-            embed = {
-                "title": mention.title or "New Social Mention",
-                "url": mention.url,
-                "description": mention.content[:1500] if mention.content else "No content",
-                "color": color,
-                "fields": [
-                    {"name": "Source", "value": mention.source, "inline": True},
-                    {"name": "Author", "value": mention.author or "unknown", "inline": True},
-                    {"name": "Intents", "value": tags_str or "None", "inline": True},
-                ],
-                "footer": {"text": "ParseStream Free Social Monitor"},
-            }
-            if reply and reply.content:
-                embed["fields"].append({
-                    "name": "💡 Suggested Reply",
-                    "value": reply.content[:1000],
-                    "inline": False,
-                })
-            payload = {"content": f"🚨 **New Mention Alert**: {title}", "embeds": [embed]}
-        # Slack webhook format
-        elif "slack.com" in self.webhook_url:
-            blocks = [
-                {
-                    "type": "section",
-                    "text": {"type": "mrkdwn", "text": f"*<{mention.url}|{mention.title or 'New Mention'}>*\n*{tags_str}* | Source: `{mention.source}`\n\n{mention.content[:500]}"}
-                }
-            ]
-            if reply and reply.content:
-                blocks.append({
-                    "type": "section",
-                    "text": {"type": "mrkdwn", "text": f"💡 *Suggested Reply:*\n>{reply.content}"}
-                })
-            payload = {"text": f"New ParseStream Mention: {mention.title}", "blocks": blocks}
-        else:
-            # Generic webhook JSON
             payload = {
-                "source": mention.source,
-                "title": mention.title,
-                "url": mention.url,
-                "content": mention.content,
-                "author": mention.author,
-                "score": mention.score,
-                "intent_tags": [{"tag": t.tag, "confidence": t.confidence} for t in intent_tags],
-                "suggested_reply": reply.content if reply else None,
+                "content": f"🚨 **Reddit Plus Alert**: {title}",
+                "embeds": [
+                    {
+                        "title": title,
+                        "url": url,
+                        "description": message[:1500],
+                        "color": 0xFF4500,
+                        "fields": [
+                            {"name": "Subreddit", "value": f"r/{subreddit}" if subreddit else "all", "inline": True},
+                            {"name": "Opportunity", "value": f"{opportunity_score}/100" if opportunity_score else "N/A", "inline": True},
+                        ],
+                        "footer": {"text": "Reddit Plus v2 Intelligence"},
+                    }
+                ],
+            }
+        elif "slack.com" in self.webhook_url:
+            payload = {
+                "text": f"🚨 *{title}*\n<{url}|View Discussion>\n{message[:400]}",
+            }
+        else:
+            payload = {
+                "title": title,
+                "message": message,
+                "url": url,
+                "subreddit": subreddit,
+                "opportunity_score": opportunity_score,
             }
 
         try:
-            resp = await self.client.post(self.webhook_url, json=payload)
+            resp = await client.post(self.webhook_url, json=payload)
             resp.raise_for_status()
-            logger.info(f"Webhook alert dispatched to {self.webhook_url[:30]}...")
+            logger.info("Webhook alert dispatched successfully")
             return True
         except Exception as e:
-            logger.error(f"Failed to dispatch webhook: {e}")
+            logger.warning(f"Webhook alert failed: {e}")
             return False
 
     async def close(self):
-        await self.client.aclose()
+        if self._client and not self._client.is_closed:
+            await self._client.aclose()
 
 
 _webhook_sender: Optional[WebhookAlertSender] = None

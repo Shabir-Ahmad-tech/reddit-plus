@@ -3,33 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RedditPulse — Social Intelligence Dashboard</title>
+  <title>Reddit Plus v2 — Opportunity Intelligence Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --reddit-orange: #FF4500;
       --reddit-orange-hover: #e03d00;
-      --reddit-orange-soft: rgba(255,69,0,0.12);
-      --reddit-orange-softer: rgba(255,69,0,0.06);
-      --sidebar-width: 240px;
-      --sidebar-bg: #0f1117;
-      --content-bg: #f5f6fa;
-      --card-bg: #ffffff;
-      --border: #e5e7eb;
+      --reddit-orange-soft: rgba(255, 69, 0, 0.12);
+      --reddit-orange-softer: rgba(255, 69, 0, 0.05);
+      --sidebar-width: 250px;
+      --sidebar-bg: #0F1117;
+      --content-bg: #F4F6F9;
+      --card-bg: #FFFFFF;
+      --border: #E5E7EB;
       --text-primary: #111827;
-      --text-secondary: #6b7280;
-      --text-muted: #9ca3af;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --info: #3b82f6;
+      --text-secondary: #4B5563;
+      --text-muted: #9CA3AF;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --info: #3B82F6;
       --radius: 12px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
-      --shadow-lg: 0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
     }
 
     body {
@@ -57,89 +58,82 @@
     }
 
     .sidebar-logo {
-      padding: 20px 16px 16px;
+      padding: 22px 18px 18px;
       border-bottom: 1px solid rgba(255,255,255,0.06);
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
-    .logo-icon {
-      width: 34px; height: 34px;
-      background: var(--reddit-orange);
+    .logo-badge {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #FF5722 0%, #FF4500 100%);
       border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 17px;
-      flex-shrink: 0;
-    }
-
-    .logo-text {
+      font-size: 18px;
       color: #fff;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(255,69,0,0.4);
     }
-    .logo-sub { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 400; letter-spacing: 0.5px; }
 
-    .sidebar-section { padding: 16px 10px 8px; }
-    .sidebar-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.25); padding: 0 8px; margin-bottom: 4px; font-weight: 600; }
+    .logo-text { color: #fff; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo-version { font-size: 10px; color: var(--reddit-orange); background: var(--reddit-orange-soft); padding: 1px 6px; border-radius: 4px; font-weight: 700; margin-left: 4px; }
+    .logo-sub { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 500; letter-spacing: 0.5px; }
+
+    .sidebar-section { padding: 14px 10px 6px; }
+    .sidebar-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: rgba(255,255,255,0.3); padding: 0 10px; margin-bottom: 6px; font-weight: 700; }
 
     .nav-item {
       display: flex; align-items: center; gap: 10px;
-      padding: 9px 10px;
+      padding: 9px 12px;
       border-radius: 8px;
-      color: rgba(255,255,255,0.55);
+      color: rgba(255,255,255,0.6);
       font-size: 13.5px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.15s ease;
       margin-bottom: 2px;
       text-decoration: none;
     }
-    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
-    .nav-item.active { background: var(--reddit-orange-soft); color: #fff; }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.95); }
+    .nav-item.active { background: var(--reddit-orange-soft); color: #fff; font-weight: 600; }
     .nav-item.active .nav-icon { color: var(--reddit-orange); }
-    .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+    .nav-icon { font-size: 16px; width: 22px; text-align: center; }
     .nav-badge {
       margin-left: auto;
       background: var(--reddit-orange);
       color: #fff;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 2px 6px;
+      padding: 1px 7px;
       border-radius: 100px;
-      min-width: 18px;
-      text-align: center;
     }
 
     .sidebar-footer {
       margin-top: auto;
-      padding: 12px;
+      padding: 14px;
       border-top: 1px solid rgba(255,255,255,0.06);
     }
-    .scheduler-status {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 10px;
-      border-radius: 8px;
+    .runner-status-card {
       background: rgba(255,255,255,0.04);
-      font-size: 12px;
-      color: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .status-dot {
-      width: 7px; height: 7px;
+      width: 8px; height: 8px;
       border-radius: 50%;
-      background: var(--text-muted);
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse-dot 2s infinite;
       flex-shrink: 0;
     }
-    .status-dot.running { background: var(--success); box-shadow: 0 0 6px var(--success); animation: pulse-dot 2s infinite; }
-    .status-dot.stopped { background: var(--danger); }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    /* ── MAIN CONTENT ────────────────────────── */
+    /* ── MAIN LAYOUT ─────────────────────────── */
     .main {
       margin-left: var(--sidebar-width);
       flex: 1;
@@ -152,360 +146,248 @@
     .topbar {
       background: var(--card-bg);
       border-bottom: 1px solid var(--border);
-      padding: 0 28px;
-      height: 56px;
-      display: flex; align-items: center; gap: 12px;
+      padding: 0 32px;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 50;
     }
-    .topbar-title {
-      font-size: 15px; font-weight: 600; color: var(--text-primary);
-    }
+    .topbar-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
     .topbar-subtitle { font-size: 12px; color: var(--text-muted); }
-    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
 
     .btn {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 7px 14px;
+      padding: 8px 14px;
       border-radius: 8px;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
-      border: none;
-      transition: all 0.15s;
-      text-decoration: none;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
       font-family: inherit;
+      text-decoration: none;
     }
     .btn-primary { background: var(--reddit-orange); color: #fff; }
     .btn-primary:hover { background: var(--reddit-orange-hover); }
-    .btn-secondary { background: var(--content-bg); color: var(--text-secondary); border: 1px solid var(--border); }
-    .btn-secondary:hover { background: var(--border); color: var(--text-primary); }
-    .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
-    .btn-ghost:hover { background: var(--content-bg); }
+    .btn-secondary { background: var(--card-bg); color: var(--text-secondary); border-color: var(--border); }
+    .btn-secondary:hover { background: var(--content-bg); color: var(--text-primary); }
+    .btn-ghost { background: transparent; color: var(--text-secondary); }
+    .btn-ghost:hover { background: rgba(0,0,0,0.04); color: var(--text-primary); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-danger:hover { background: #dc2626; }
-    .btn-sm { padding: 5px 10px; font-size: 12px; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .page { padding: 24px 28px; flex: 1; display: none; }
+    .page { padding: 28px 32px; flex: 1; display: none; }
     .page.active { display: block; }
 
-    /* ── STAT CARDS ──────────────────────────── */
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-
-    .stat-card {
+    /* ── CARDS & METRICS ─────────────────────── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
       position: relative;
-      overflow: hidden;
     }
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--accent, var(--reddit-orange));
-    }
-    .stat-label { font-size: 12px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-    .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
-    .stat-icon { position: absolute; top: 16px; right: 16px; font-size: 22px; opacity: 0.15; }
+    .metric-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-muted); margin-bottom: 6px; }
+    .metric-value { font-size: 26px; font-weight: 800; color: var(--text-primary); line-height: 1.1; }
+    .metric-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .metric-icon { position: absolute; top: 18px; right: 18px; font-size: 24px; opacity: 0.15; }
 
-    /* ── CARD ────────────────────────────────── */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-sm);
     }
     .card-header {
-      padding: 16px 20px;
+      padding: 16px 22px;
       border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-    .card-body { padding: 20px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+    .card-body { padding: 20px 22px; }
 
-    /* ── FILTERS ─────────────────────────────── */
-    .filters-row {
-      display: flex; align-items: center; gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-    .search-input {
-      flex: 1; min-width: 200px; max-width: 340px;
-      padding: 8px 12px 8px 36px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 13px;
-      font-family: inherit;
-      background: var(--card-bg);
-      color: var(--text-primary);
-      transition: border-color 0.15s;
-      position: relative;
-    }
-    .search-input:focus { outline: none; border-color: var(--reddit-orange); }
-    .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 340px; }
-    .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none; }
+    /* ── OPPORTUNITY CARD (HERO ELEMENT) ─────── */
+    .opportunity-list { display: flex; flex-direction: column; gap: 14px; }
 
-    .select {
-      padding: 8px 32px 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 13px;
-      font-family: inherit;
-      background: var(--card-bg);
-      color: var(--text-primary);
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-    }
-    .select:focus { outline: none; border-color: var(--reddit-orange); }
-
-    .tag-filter {
-      display: flex; gap: 6px; flex-wrap: wrap;
-    }
-    .tag-btn {
-      padding: 5px 11px;
-      border-radius: 100px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      color: var(--text-secondary);
-      transition: all 0.12s;
-    }
-    .tag-btn:hover { border-color: var(--reddit-orange); color: var(--reddit-orange); }
-    .tag-btn.active { background: var(--reddit-orange); color: #fff; border-color: var(--reddit-orange); }
-
-    /* ── POST CARD ───────────────────────────── */
-    .posts-list { display: flex; flex-direction: column; gap: 12px; }
-
-    .post-card {
+    .opp-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s, transform 0.15s;
       overflow: hidden;
-      transition: box-shadow 0.15s, transform 0.1s;
     }
-    .post-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .opp-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
 
-    .post-card-inner { padding: 16px 20px; }
+    .opp-card-inner { padding: 18px 22px; }
 
-    .post-meta-row {
-      display: flex; align-items: center; gap: 8px;
+    .opp-top-row {
+      display: flex; align-items: center; gap: 10px;
       margin-bottom: 10px;
       flex-wrap: wrap;
     }
-    .subreddit-badge {
-      display: inline-flex; align-items: center; gap: 4px;
+
+    .opp-score-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 800;
+      background: #FEF3C7;
+      color: #92400E;
+    }
+    .opp-score-badge.high { background: #DCFCE7; color: #166534; }
+    .opp-score-badge.extreme { background: #FEE2E2; color: #991B1B; }
+
+    .subreddit-chip {
       background: var(--reddit-orange-softer);
       border: 1px solid var(--reddit-orange-soft);
       color: var(--reddit-orange);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 100px;
+      text-decoration: none;
+    }
+
+    .intent-chip {
+      padding: 3px 9px;
+      border-radius: 100px;
       font-size: 11.5px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 100px;
+      font-weight: 700;
+      text-transform: capitalize;
     }
-    .post-author { font-size: 12px; color: var(--text-muted); }
-    .post-age { font-size: 12px; color: var(--text-muted); }
-    .flair-chip {
-      padding: 2px 8px;
-      border-radius: 100px;
-      font-size: 11px;
-      font-weight: 500;
-      background: #f3f4f6;
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-    }
-    .post-type-chip {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-    .post-type-text { background: #e0f2fe; color: #0369a1; }
-    .post-type-link { background: #f0fdf4; color: #15803d; }
-    .post-type-image { background: #fdf4ff; color: #7e22ce; }
-    .post-type-video { background: #fff7ed; color: #c2410c; }
+    .intent-buy-intent { background: #DCFCE7; color: #166534; }
+    .intent-pain-point { background: #FEE2E2; color: #991B1B; }
+    .intent-seeking-alternatives { background: #FEF3C7; color: #92400E; }
+    .intent-competitor-complaint { background: #FFEDD5; color: #C2410C; }
+    .intent-question { background: #DBEAFE; color: #1E40AF; }
+    .intent-other { background: #F3F4F6; color: #4B5563; }
 
-    .post-title {
-      font-size: 14.5px;
-      font-weight: 600;
+    .opp-title {
+      font-size: 15px;
+      font-weight: 700;
       color: var(--text-primary);
-      line-height: 1.4;
       margin-bottom: 8px;
+      line-height: 1.4;
     }
-    .post-title a { color: inherit; text-decoration: none; }
-    .post-title a:hover { color: var(--reddit-orange); }
+    .opp-title a { color: inherit; text-decoration: none; }
+    .opp-title a:hover { color: var(--reddit-orange); }
 
-    .post-excerpt {
+    .opp-excerpt {
       font-size: 13px;
       color: var(--text-secondary);
       line-height: 1.6;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       display: -webkit-box;
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
-    .post-signals {
-      display: flex; align-items: center; gap: 16px;
-      flex-wrap: wrap;
+    .match-reasons-row {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;
     }
-    .signal {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-    .signal-icon { font-size: 13px; }
-    .signal.upvotes { color: var(--reddit-orange); }
-    .signal.upvotes .signal-icon { color: var(--reddit-orange); }
-
-    .post-actions {
-      display: flex; align-items: center; gap: 8px;
-      margin-left: auto;
-    }
-
-    .intent-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px;
-      border-radius: 100px;
-      font-size: 11.5px;
+    .match-reason-tag {
+      font-size: 11px;
       font-weight: 600;
-      text-transform: capitalize;
-      white-space: nowrap;
+      background: #F3F4F6;
+      border: 1px solid #E5E7EB;
+      color: #374151;
+      padding: 2px 8px;
+      border-radius: 4px;
     }
 
-    .intent-buy-intent { background: #d1fae5; color: #065f46; }
-    .intent-pain-point { background: #fee2e2; color: #991b1b; }
-    .intent-competitor-complaint { background: #fff3cd; color: #92400e; }
-    .intent-question { background: #dbeafe; color: #1e40af; }
-    .intent-praise { background: #f0fdf4; color: #166534; }
-    .intent-seeking-alternatives { background: #fef3c7; color: #92400e; }
-    .intent-venting { background: #fce7f3; color: #9d174d; }
-    .intent-success-story { background: #d1fae5; color: #065f46; }
-    .intent-tool-review { background: #e0e7ff; color: #3730a3; }
-    .intent-hiring { background: #f5f3ff; color: #5b21b6; }
-    .intent-other { background: #f3f4f6; color: #374151; }
+    .opp-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid #F3F4F6;
+      padding-top: 12px;
+      margin-top: 6px;
+    }
+    .opp-signals { display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .opp-signals .signal-hot { color: var(--reddit-orange); font-weight: 700; }
 
-    .opportunity-bar-wrap {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--text-muted);
-    }
-    .opportunity-bar {
-      width: 60px; height: 5px;
-      background: #e5e7eb;
-      border-radius: 100px;
-      overflow: hidden;
-    }
-    .opportunity-fill {
-      height: 100%;
-      border-radius: 100px;
-      background: var(--reddit-orange);
-      transition: width 0.4s;
-    }
-
-    /* ── AI ANALYSIS DRAWER ──────────────────── */
-    .analysis-drawer {
+    /* ── ANALYSIS & CRITIC DRAWER ───────────── */
+    .opp-drawer {
+      background: #F9FAFB;
       border-top: 1px solid var(--border);
-      padding: 16px 20px;
-      background: #fafbfc;
+      padding: 20px 22px;
       display: none;
     }
-    .analysis-drawer.open { display: block; }
-    .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
-    .analysis-section { }
-    .analysis-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-muted); margin-bottom: 6px; }
-    .analysis-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
-    .analysis-full { grid-column: 1 / -1; }
+    .opp-drawer.open { display: block; }
 
-    .signal-meters { display: flex; gap: 20px; margin-top: 14px; flex-wrap: wrap; }
-    .meter-item { display: flex; flex-direction: column; gap: 4px; }
-    .meter-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .meter-bar { width: 120px; height: 6px; background: #e5e7eb; border-radius: 100px; overflow: hidden; }
-    .meter-fill { height: 100%; border-radius: 100px; }
-    .meter-fill.opportunity { background: var(--reddit-orange); }
-    .meter-fill.buy-signal { background: var(--success); }
-    .meter-fill.engagement { background: var(--info); }
-    .meter-value { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+    .drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+    .drawer-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 6px; }
+    .drawer-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
 
-    .tag-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-    .pill {
-      padding: 3px 8px;
-      border-radius: 100px;
-      font-size: 11.5px;
-      font-weight: 500;
-      background: var(--reddit-orange-softer);
-      color: var(--reddit-orange);
-      border: 1px solid var(--reddit-orange-soft);
-    }
-    .pill.product { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
-    .pill.pain { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+    .meters-bar-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; }
+    .meter-box { min-width: 110px; }
+    .meter-name { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .meter-progress { width: 100%; height: 6px; background: #E5E7EB; border-radius: 100px; overflow: hidden; }
+    .meter-bar-fill { height: 100%; border-radius: 100px; background: var(--reddit-orange); }
 
-    .reply-box {
-      margin-top: 16px;
-      background: white;
+    /* Critic Scorecard */
+    .critic-card {
+      background: #FFFFFF;
       border: 1px solid var(--border);
       border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 14px;
+    }
+    .critic-title { font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .critic-scores-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; text-align: center; }
+    .critic-metric { background: #F9FAFB; border-radius: 6px; padding: 6px; }
+    .critic-metric-val { font-size: 14px; font-weight: 800; color: var(--text-primary); }
+    .critic-metric-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+
+    /* Reply Editor Box */
+    .reply-editor-wrap {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-top: 16px;
       overflow: hidden;
     }
-    .reply-box-header {
+    .reply-editor-header {
       padding: 10px 14px;
-      background: #f9fafb;
+      background: #F9FAFB;
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
-      font-size: 12px; font-weight: 600; color: var(--text-secondary);
+      font-size: 12px; font-weight: 700;
     }
-    .reply-content {
+    .reply-textarea {
+      width: 100%;
       padding: 12px 14px;
-      font-size: 13px;
+      border: none;
+      font-size: 13.5px;
+      line-height: 1.6;
+      font-family: inherit;
       color: var(--text-primary);
-      line-height: 1.7;
-      white-space: pre-wrap;
+      resize: vertical;
+      min-height: 90px;
     }
-    .reply-actions { padding: 8px 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; }
+    .reply-textarea:focus { outline: none; }
+    .reply-editor-footer {
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      background: #FAFAFA;
+      display: flex; align-items: center; gap: 8px;
+    }
 
-    /* ── SKELETON LOADER ─────────────────────── */
-    .skeleton {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: skeleton-shine 1.4s infinite;
-      border-radius: 6px;
-    }
-    @keyframes skeleton-shine {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-    .skeleton-card { height: 140px; border-radius: var(--radius); margin-bottom: 12px; }
-    .skeleton-line { height: 14px; margin-bottom: 8px; }
-    .skeleton-line.short { width: 40%; }
-    .skeleton-line.medium { width: 70%; }
-
-    /* ── EMPTY STATE ─────────────────────────── */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-    }
-    .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
-    .empty-title { font-size: 16px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
-    .empty-desc { font-size: 13px; color: var(--text-muted); max-width: 320px; margin: 0 auto 20px; }
-
-    /* ── FORM ELEMENTS ───────────────────────── */
+    /* ── FORM CONTROLS ───────────────────────── */
     .form-group { margin-bottom: 16px; }
-    .form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
     .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-    .form-input {
+    .form-input, .select {
       width: 100%;
       padding: 9px 12px;
       border: 1px solid var(--border);
@@ -516,751 +398,378 @@
       background: var(--card-bg);
       transition: border-color 0.15s;
     }
-    .form-input:focus { outline: none; border-color: var(--reddit-orange); box-shadow: 0 0 0 3px var(--reddit-orange-softer); }
+    .form-input:focus, .select:focus { outline: none; border-color: var(--reddit-orange); box-shadow: 0 0 0 3px var(--reddit-orange-softer); }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-    .toggle {
-      position: relative;
-      width: 36px; height: 20px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .toggle input { display: none; }
-    .toggle-slider {
-      position: absolute;
-      inset: 0;
-      background: #d1d5db;
-      border-radius: 100px;
-      transition: background 0.2s;
-    }
-    .toggle-slider::before {
-      content: '';
-      position: absolute;
-      width: 14px; height: 14px;
-      background: #fff;
-      border-radius: 50%;
-      top: 3px; left: 3px;
-      transition: transform 0.2s;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-    .toggle input:checked ~ .toggle-slider { background: var(--reddit-orange); }
-    .toggle input:checked ~ .toggle-slider::before { transform: translateX(16px); }
-
-    .toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .toggle-row:last-child { border-bottom: none; }
-    .toggle-row-info { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-    .toggle-row-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-
-    /* ── KEYWORD TAGS ────────────────────────── */
-    .keyword-grid { display: flex; flex-direction: column; gap: 10px; }
-    .keyword-item {
-      display: flex; align-items: center;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 16px;
-      gap: 12px;
-    }
-    .keyword-name { font-size: 14px; font-weight: 600; color: var(--text-primary); flex: 1; }
-    .keyword-subs { font-size: 12px; color: var(--text-muted); }
-    .keyword-status { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 100px; }
-    .keyword-active { background: #d1fae5; color: #065f46; }
-    .keyword-inactive { background: #f3f4f6; color: var(--text-muted); }
-
-    /* ── SUBREDDIT MANAGER ───────────────────── */
-    .subreddit-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-    .subreddit-chip {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 12px;
-      background: var(--reddit-orange-softer);
-      border: 1px solid var(--reddit-orange-soft);
-      border-radius: 100px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--reddit-orange);
-    }
-    .chip-remove { cursor: pointer; opacity: 0.6; font-size: 14px; transition: opacity 0.1s; }
-    .chip-remove:hover { opacity: 1; }
+    /* Filters Bar */
+    .filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
 
     /* ── TOAST NOTIFICATIONS ─────────────────── */
-    .toast-container {
-      position: fixed;
-      bottom: 24px; right: 24px;
-      z-index: 9999;
-      display: flex; flex-direction: column; gap: 8px;
-      max-width: 360px;
-    }
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
     .toast {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 12px 16px;
-      background: var(--sidebar-bg);
-      color: #fff;
-      border-radius: 10px;
-      box-shadow: var(--shadow-lg);
-      font-size: 13px;
-      line-height: 1.5;
-      animation: toast-in 0.25s ease;
-      border-left: 3px solid var(--reddit-orange);
+      background: #1F2937; color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500;
+      box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 10px; border-left: 4px solid var(--reddit-orange);
+      animation: slide-up 0.2s ease;
     }
-    .toast.success { border-color: var(--success); }
-    .toast.error { border-color: var(--danger); }
-    .toast.info { border-color: var(--info); }
-    .toast-icon { font-size: 15px; margin-top: 1px; }
-    .toast-dismiss { margin-left: auto; opacity: 0.5; cursor: pointer; font-size: 16px; padding: 0 2px; }
-    .toast-dismiss:hover { opacity: 1; }
-    @keyframes toast-in {
-      from { transform: translateY(16px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--danger); }
+    @keyframes slide-up { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-    /* ── MODAL ───────────────────────────────── */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 200;
-      display: flex; align-items: center; justify-content: center;
-      padding: 24px;
-      display: none;
-    }
+    /* ── MODALS ──────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-lg);
-      width: 100%;
-      max-width: 480px;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    .modal-header {
-      padding: 20px 24px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
+    .modal-box { background: var(--card-bg); border-radius: var(--radius); width: 100%; max-width: 540px; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; }
+    .modal-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .modal-title { font-size: 15px; font-weight: 700; }
-    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 2px 6px; border-radius: 6px; }
-    .modal-close:hover { background: var(--content-bg); color: var(--text-primary); }
     .modal-body { padding: 20px 24px; }
-    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
 
-    /* ── LOG VIEWER ──────────────────────────── */
-    .log-list { font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; }
-    .log-item { padding: 6px 0; border-bottom: 1px solid var(--border); display: flex; gap: 10px; }
-    .log-time { color: var(--text-muted); white-space: nowrap; }
-    .log-msg { color: var(--text-secondary); }
-    .log-msg.success { color: var(--success); }
-    .log-msg.error { color: var(--danger); }
+    /* ── SKELETON ────────────────────────────── */
+    .skeleton { background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skeleton-card { height: 140px; border-radius: var(--radius); margin-bottom: 12px; }
 
-    /* ── PAGINATION ──────────────────────────── */
-    .pagination { display: flex; align-items: center; gap: 8px; margin-top: 20px; justify-content: center; }
-    .page-btn {
-      padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      background: var(--card-bg);
-      color: var(--text-secondary);
-      font-family: inherit;
-      transition: all 0.12s;
-    }
-    .page-btn:hover { border-color: var(--reddit-orange); color: var(--reddit-orange); }
-    .page-btn.active { background: var(--reddit-orange); color: #fff; border-color: var(--reddit-orange); }
-    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .page-info { font-size: 13px; color: var(--text-muted); }
-
-    /* ── SECTION DIVIDER ─────────────────────── */
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    .section-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
-    .section-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-
-    /* ── AI Playground ───────────────────────── */
-    .playground-result {
-      margin-top: 16px;
-      background: #f9fafb;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.7;
-    }
-    .playground-result pre { white-space: pre-wrap; word-break: break-word; }
-
-    /* ── RESPONSIVE ──────────────────────────── */
-    @media (max-width: 900px) {
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .analysis-grid { grid-template-columns: 1fr; }
-      .form-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 640px) {
-      .sidebar { width: 0; overflow: hidden; }
-      .main { margin-left: 0; }
-      .stats-grid { grid-template-columns: 1fr; }
-    }
-
-    /* ── MISC ────────────────────────────────── */
-    .divider { height: 1px; background: var(--border); margin: 16px 0; }
-    .text-sm { font-size: 13px; }
-    .text-xs { font-size: 11.5px; }
-    .text-muted { color: var(--text-muted); }
-    .text-orange { color: var(--reddit-orange); }
-    .flex { display: flex; }
-    .items-center { align-items: center; }
-    .gap-2 { gap: 8px; }
-    .gap-3 { gap: 12px; }
-    .ml-auto { margin-left: auto; }
-    .mb-4 { margin-bottom: 16px; }
-    .mt-2 { margin-top: 8px; }
-    .font-semibold { font-weight: 600; }
-    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .w-full { width: 100%; }
-    .hidden { display: none !important; }
-    .loading-spinner {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-spinner.dark {
-      border-color: rgba(0,0,0,0.1);
-      border-top-color: var(--reddit-orange);
-    }
+    .empty-box { text-align: center; padding: 60px 20px; }
+    .empty-icon { font-size: 44px; margin-bottom: 14px; opacity: 0.5; }
+    .empty-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+    .empty-sub { font-size: 13px; color: var(--text-muted); max-width: 320px; margin: 0 auto 18px; }
   </style>
 </head>
 <body>
-<!-- ── SIDEBAR ──────────────────────────── -->
+
+<!-- ── SIDEBAR ────────────────────────────────── -->
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-icon">🔍</div>
+    <div class="logo-badge">R+</div>
     <div>
-      <div class="logo-text">RedditPulse</div>
-      <div class="logo-sub">INTELLIGENCE PLATFORM</div>
-    </div>
-  </div>
-
-  <div class="sidebar-section">
-    <div class="sidebar-label">Monitoring</div>
-    <div class="nav-item active" data-page="overview" onclick="navigate('overview')">
-      <span class="nav-icon">⬡</span>
-      Overview
-    </div>
-    <div class="nav-item" data-page="posts" onclick="navigate('posts')">
-      <span class="nav-icon">📋</span>
-      Posts Feed
-      <span class="nav-badge" id="sidebar-count">0</span>
-    </div>
-    <div class="nav-item" data-page="keywords" onclick="navigate('keywords')">
-      <span class="nav-icon">🏷</span>
-      Keywords
-    </div>
-    <div class="nav-item" data-page="subreddits" onclick="navigate('subreddits')">
-      <span class="nav-icon">🔸</span>
-      Subreddits
+      <div class="logo-text">Reddit Plus <span class="logo-version">v2.0</span></div>
+      <div class="logo-sub">OPPORTUNITY INTELLIGENCE</div>
     </div>
   </div>
 
   <div class="sidebar-section">
     <div class="sidebar-label">Intelligence</div>
-    <div class="nav-item" data-page="playground" onclick="navigate('playground')">
-      <span class="nav-icon">🤖</span>
-      AI Playground
+    <div class="nav-item active" data-page="opportunities" onclick="navigate('opportunities')">
+      <span class="nav-icon">🎯</span>
+      Opportunity Inbox
+      <span class="nav-badge" id="opps-badge">0</span>
     </div>
-    <div class="nav-item" data-page="logs" onclick="navigate('logs')">
-      <span class="nav-icon">📟</span>
-      Activity Log
+    <div class="nav-item" data-page="posts" onclick="navigate('posts')">
+      <span class="nav-icon">📋</span>
+      Reddit Explorer
+    </div>
+    <div class="nav-item" data-page="monitoring" onclick="navigate('monitoring')">
+      <span class="nav-icon">⚙️</span>
+      Monitoring Rules
     </div>
   </div>
 
   <div class="sidebar-section">
-    <div class="sidebar-label">Configuration</div>
+    <div class="sidebar-label">Community & Market</div>
+    <div class="nav-item" data-page="subreddits" onclick="navigate('subreddits')">
+      <span class="nav-icon">🔸</span>
+      Subreddit Profiles
+    </div>
+    <div class="nav-item" data-page="competitors" onclick="navigate('competitors')">
+      <span class="nav-icon">⚔️</span>
+      Competitor Tracker
+    </div>
+    <div class="nav-item" data-page="playground" onclick="navigate('playground')">
+      <span class="nav-icon">🤖</span>
+      AI & Critic Lab
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">System</div>
     <div class="nav-item" data-page="settings" onclick="navigate('settings')">
-      <span class="nav-icon">⚙️</span>
-      Settings
+      <span class="nav-icon">🔔</span>
+      Alerts & Settings
+    </div>
+    <div class="nav-item" data-page="logs" onclick="navigate('logs')">
+      <span class="nav-icon">📟</span>
+      Activity Stream
     </div>
   </div>
 
   <div class="sidebar-footer">
-    <div class="scheduler-status">
-      <div class="status-dot" id="scheduler-dot"></div>
-      <div>
-        <div id="scheduler-label" style="font-size:12px;color:rgba(255,255,255,0.7)">Scheduler</div>
-        <div id="scheduler-sublabel" style="font-size:10px">Checking...</div>
-      </div>
-      <div style="margin-left:auto;display:flex;gap:6px;">
-        <button class="btn btn-sm" id="btn-start-scheduler" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:none;font-size:11px;" onclick="controlScheduler('start')">▶</button>
-        <button class="btn btn-sm" id="btn-stop-scheduler" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:none;font-size:11px;" onclick="controlScheduler('stop')">⏹</button>
+    <div class="runner-status-card">
+      <div class="status-dot" id="runner-dot"></div>
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:700;color:#fff;">Monitoring Loop</div>
+        <div id="runner-label" style="font-size:10.5px;color:rgba(255,255,255,0.5);">Active · Checking</div>
       </div>
     </div>
   </div>
 </aside>
 
-<!-- ── MAIN CONTENT ──────────────────────── -->
+<!-- ── MAIN CONTAINER ────────────────────────── -->
 <main class="main">
-
-  <!-- TOPBAR -->
-  <div class="topbar">
+  <!-- Topbar -->
+  <header class="topbar">
     <div>
-      <div class="topbar-title" id="topbar-title">Overview</div>
-      <div class="topbar-subtitle" id="topbar-subtitle">Reddit intelligence dashboard</div>
+      <div class="topbar-title" id="topbar-title">Opportunity Inbox</div>
+      <div class="topbar-subtitle" id="topbar-subtitle">High-intent Reddit conversations worth acting on today</div>
     </div>
-      <div class="topbar-right">
-        <button class="btn btn-ghost btn-sm" onclick="reclassifyAll(this)" title="Re-classify all posts with fresh AI — fixes stuck 60% confidence">
-          🧠 Re-classify
-        </button>
-        <button class="btn btn-secondary btn-sm" onclick="triggerPoll(this)">
-          🔄 Poll Now
-        </button>
-        <button class="btn btn-primary btn-sm" onclick="triggerFullCycle(this)">
-          ⚡ Run Cycle
-        </button>
-      </div>
-  </div>
+    <div class="topbar-actions">
+      <button class="btn btn-secondary btn-sm" onclick="triggerCycle(this)">
+        ⚡ Ingest & Analyze Now
+      </button>
+    </div>
+  </header>
 
-  <!-- ── PAGE: OVERVIEW ──────────────────── -->
-  <div class="page active" id="page-overview">
-    <div class="stats-grid">
-      <div class="stat-card" style="--accent:#FF4500;">
-        <div class="stat-label">Total Posts</div>
-        <div class="stat-value" id="stat-total">—</div>
-        <div class="stat-sub" id="stat-total-sub">from all subreddits</div>
-        <div class="stat-icon">📋</div>
+  <!-- ── PAGE 1: OPPORTUNITY INBOX ────────────── -->
+  <div class="page active" id="page-opportunities">
+    <!-- Metrics Grid -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">High Opportunities</div>
+        <div class="metric-value" id="metric-high-opps">—</div>
+        <div class="metric-sub">Score ≥ 70/100</div>
+        <div class="metric-icon">🔥</div>
       </div>
-      <div class="stat-card" style="--accent:#10b981;">
-        <div class="stat-label">Buy Signals Today</div>
-        <div class="stat-value" id="stat-buy">—</div>
-        <div class="stat-sub">high-opportunity posts</div>
-        <div class="stat-icon">🎯</div>
+      <div class="metric-card">
+        <div class="metric-label">Buy Signals Today</div>
+        <div class="metric-value" id="metric-buy-signals">—</div>
+        <div class="metric-sub">Active purchasing intent</div>
+        <div class="metric-icon">🎯</div>
       </div>
-      <div class="stat-card" style="--accent:#f59e0b;">
-        <div class="stat-label">Pain Points</div>
-        <div class="stat-value" id="stat-pain">—</div>
-        <div class="stat-sub">users struggling</div>
-        <div class="stat-icon">⚡</div>
+      <div class="metric-card">
+        <div class="metric-label">Pain Points</div>
+        <div class="metric-value" id="metric-pain-points">—</div>
+        <div class="metric-sub">Frustrated users</div>
+        <div class="metric-icon">⚡</div>
       </div>
-      <div class="stat-card" style="--accent:#3b82f6;">
-        <div class="stat-label">AI Analyzed</div>
-        <div class="stat-value" id="stat-analyzed">—</div>
-        <div class="stat-sub">posts with deep insights</div>
-        <div class="stat-icon">🤖</div>
+      <div class="metric-card">
+        <div class="metric-label">Active Rules</div>
+        <div class="metric-value" id="metric-rules">—</div>
+        <div class="metric-sub">Targeting Reddit</div>
+        <div class="metric-icon">🏷</div>
       </div>
     </div>
 
-    <!-- Quick stats row -->
-    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px;">
-      <div class="stat-card" style="--accent:#8b5cf6;">
-        <div class="stat-label">Questions</div>
-        <div class="stat-value" id="stat-questions">—</div>
-        <div class="stat-sub">seeking answers</div>
-        <div class="stat-icon">❓</div>
-      </div>
-      <div class="stat-card" style="--accent:#ec4899;">
-        <div class="stat-label">Seeking Alternatives</div>
-        <div class="stat-value" id="stat-alternatives">—</div>
-        <div class="stat-sub">evaluating competitors</div>
-        <div class="stat-icon">🔀</div>
-      </div>
-      <div class="stat-card" style="--accent:#06b6d4;">
-        <div class="stat-label">Keywords Active</div>
-        <div class="stat-value" id="stat-keywords">—</div>
-        <div class="stat-sub">monitored terms</div>
-        <div class="stat-icon">🏷</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <span style="font-size:16px;">🔥</span>
-        <span class="card-title">Latest Posts</span>
-        <button class="btn btn-ghost btn-sm ml-auto" onclick="navigate('posts')">View All →</button>
-      </div>
-      <div class="card-body" id="overview-latest">
-        <div class="skeleton skeleton-card"></div>
-        <div class="skeleton skeleton-card"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── PAGE: POSTS FEED ─────────────────── -->
-  <div class="page" id="page-posts">
-    <div class="filters-row">
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" id="search-input" placeholder="Search posts..." oninput="debounceSearch()" />
-      </div>
-      <select class="select" id="filter-tag" onchange="loadPosts()">
-        <option value="">All Intents</option>
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <select class="select" id="opp-filter-intent" onchange="loadOpportunities()" style="max-width:180px;">
+        <option value="">All Intent Signals</option>
         <option value="buy-intent">🎯 Buy Intent</option>
+        <option value="seeking-alternatives">🔀 Seeking Alternatives</option>
         <option value="pain-point">⚡ Pain Point</option>
         <option value="competitor-complaint">⚔️ Competitor Complaint</option>
         <option value="question">❓ Question</option>
-        <option value="seeking-alternatives">🔀 Seeking Alternatives</option>
-        <option value="praise">👍 Praise</option>
-        <option value="venting">😤 Venting</option>
-        <option value="success-story">✅ Success Story</option>
-        <option value="tool-review">🔬 Tool Review</option>
-        <option value="hiring">💼 Hiring</option>
-        <option value="other">Other</option>
       </select>
-      <select class="select" id="filter-hours" onchange="loadPosts()">
-        <option value="">All Time</option>
-        <option value="24">Last 24h</option>
-        <option value="48">Last 48h</option>
-        <option value="168">Last 7 days</option>
-        <option value="336">Last 14 days</option>
+      <select class="select" id="opp-filter-min-score" onchange="loadOpportunities()" style="max-width:180px;">
+        <option value="">All Opportunity Scores</option>
+        <option value="80">🔥 Score ≥ 80 (High Priority)</option>
+        <option value="60">⚡ Score ≥ 60 (Actionable)</option>
       </select>
-      <select class="select" id="filter-subreddit" onchange="loadPosts()">
-        <option value="">All Subreddits</option>
+      <select class="select" id="opp-filter-status" onchange="loadOpportunities()" style="max-width:150px;">
+        <option value="">All Statuses</option>
+        <option value="new">New</option>
+        <option value="saved">Saved</option>
+        <option value="replied">Replied</option>
       </select>
-      <button class="btn btn-secondary btn-sm" onclick="resetFilters()">Clear</button>
+      <button class="btn btn-secondary btn-sm" onclick="resetOppFilters()">Reset</button>
     </div>
 
-    <div id="posts-container">
+    <!-- Opportunity Feed -->
+    <div id="opp-container" class="opportunity-list">
       <div class="skeleton skeleton-card"></div>
       <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-    </div>
-
-    <div class="pagination" id="pagination"></div>
-  </div>
-
-  <!-- ── PAGE: KEYWORDS ──────────────────── -->
-  <div class="page" id="page-keywords">
-    <div class="section-header mb-4">
-      <div>
-        <div class="section-title">Tracked Keywords</div>
-        <div class="section-sub">Posts matching these keywords will be monitored from watched subreddits</div>
-      </div>
-      <button class="btn btn-primary" onclick="openKeywordModal()">+ Add Keyword</button>
-    </div>
-    <div class="keyword-grid" id="keywords-list">
       <div class="skeleton skeleton-card"></div>
     </div>
   </div>
 
-  <!-- ── PAGE: SUBREDDITS ─────────────────── -->
-  <div class="page" id="page-subreddits">
-    <div class="section-header mb-4">
-      <div>
-        <div class="section-title">Watched Subreddits</div>
-        <div class="section-sub">These subreddits will be polled for new posts matching your keywords</div>
-      </div>
-    </div>
-
-    <div class="card mb-4">
-      <div class="card-header">
-        <span class="card-title">Current Subreddits</span>
-      </div>
-      <div class="card-body">
-        <div class="subreddit-chips" id="subreddit-chips">
-          <div class="skeleton skeleton-line w-full"></div>
-        </div>
-        <div class="flex gap-2 mt-2">
-          <input type="text" class="form-input" id="add-subreddit-input" placeholder="e.g. saas, startups, webdev" style="max-width:300px;" onkeydown="if(event.key==='Enter')addSubreddit()" />
-          <button class="btn btn-primary" onclick="addSubreddit()">Add</button>
-        </div>
-        <div class="form-hint">Add one subreddit name at a time. Use r/all to monitor all of Reddit.</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">Test Live Search</span>
-      </div>
-      <div class="card-body">
-        <div class="flex gap-2">
-          <input type="text" class="form-input" id="test-keyword-input" placeholder="Enter a keyword to test live..." style="flex:1;" />
-          <input type="text" class="form-input" id="test-subreddit-input" placeholder="Subreddit (or 'all')" style="max-width:200px;" value="all" />
-          <button class="btn btn-secondary" onclick="testLiveSearch()">Search Reddit</button>
-        </div>
-        <div id="test-results" class="mt-2"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── PAGE: AI PLAYGROUND ─────────────── -->
-  <div class="page" id="page-playground">
-    <div class="section-header mb-4">
-      <div>
-        <div class="section-title">AI Playground</div>
-        <div class="section-sub">Test AI classification, analysis, and reply generation on custom Reddit posts</div>
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-      <!-- Intent Test -->
-      <div class="card">
-        <div class="card-header"><span class="card-title">🏷 Intent Classifier</span></div>
-        <div class="card-body">
-          <div class="form-group">
-            <label class="form-label">Reddit Post Text</label>
-            <textarea class="form-input" id="intent-text" rows="4" placeholder="Paste a Reddit post here..."></textarea>
-          </div>
-          <button class="btn btn-primary w-full" onclick="testIntent()">Classify Intent</button>
-          <div id="intent-result" class="playground-result hidden"></div>
-        </div>
-      </div>
-
-      <!-- Reply Test -->
-      <div class="card">
-        <div class="card-header"><span class="card-title">💬 Reply Generator</span></div>
-        <div class="card-body">
-          <div class="form-group">
-            <label class="form-label">Post Title</label>
-            <input type="text" class="form-input" id="reply-title" placeholder="Post title..." />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Post Content</label>
-            <textarea class="form-input" id="reply-content" rows="3" placeholder="Post body..."></textarea>
-          </div>
-          <div class="flex gap-2 mb-4">
-            <select class="select" id="reply-intent" style="flex:1;">
-              <option value="buy-intent">Buy Intent</option>
-              <option value="pain-point">Pain Point</option>
-              <option value="question">Question</option>
-              <option value="seeking-alternatives">Seeking Alternatives</option>
-              <option value="competitor-complaint">Competitor Complaint</option>
-            </select>
-            <select class="select" id="reply-tone">
-              <option value="casual">Casual</option>
-              <option value="professional">Professional</option>
-              <option value="technical">Technical</option>
-              <option value="empathetic">Empathetic</option>
-            </select>
-          </div>
-          <button class="btn btn-primary w-full" onclick="testReply()">Generate Reply</button>
-          <div id="reply-result" class="playground-result hidden"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Deep Analysis Test -->
-    <div class="card mt-2" style="margin-top:16px;">
-      <div class="card-header"><span class="card-title">🔬 Deep Post Analysis</span></div>
+  <!-- ── PAGE 2: REDDIT EXPLORER ──────────────── -->
+  <div class="page" id="page-posts">
+    <div class="card mb-4" style="margin-bottom:20px;">
+      <div class="card-header"><span class="card-title">Live Reddit Search</span></div>
       <div class="card-body">
         <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">Title</label>
-            <input type="text" class="form-input" id="analyze-title" placeholder="Post title..." />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Subreddit</label>
-            <input type="text" class="form-input" id="analyze-subreddit" placeholder="e.g. saas" />
-          </div>
+          <input type="text" class="form-input" id="live-search-query" placeholder="e.g. 'looking for CRM alternative'" />
+          <input type="text" class="form-input" id="live-search-sub" placeholder="Subreddit (e.g. 'SaaS' or 'all')" value="all" />
         </div>
-        <div class="form-group">
-          <label class="form-label">Content</label>
-          <textarea class="form-input" id="analyze-content" rows="4" placeholder="Paste full Reddit post content..."></textarea>
-        </div>
-        <button class="btn btn-primary" onclick="testAnalyze()">Run Deep Analysis</button>
-        <div id="analyze-result" class="playground-result hidden"></div>
+        <button class="btn btn-primary mt-2" style="margin-top:10px;" onclick="runLiveSearch()">Search Live Reddit</button>
+        <div id="live-search-results" style="margin-top:16px;"></div>
       </div>
     </div>
-  </div>
 
-  <!-- ── PAGE: LOGS ───────────────────────── -->
-  <div class="page" id="page-logs">
-    <div class="section-header mb-4">
-      <div>
-        <div class="section-title">Activity Log</div>
-        <div class="section-sub">Real-time system events and polling history</div>
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="loadLogs()">↻ Refresh</button>
-    </div>
     <div class="card">
-      <div class="card-body" style="padding:0;">
-        <div class="log-list" id="log-list" style="padding:16px;">
-          <div class="text-muted text-sm">Loading logs...</div>
+      <div class="card-header"><span class="card-title">Stored Reddit Discussions</span></div>
+      <div class="card-body">
+        <div id="posts-container">
+          <div class="skeleton skeleton-card"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ── PAGE: SETTINGS ──────────────────── -->
-  <div class="page" id="page-settings">
-    <div style="max-width:720px;">
+  <!-- ── PAGE 3: MONITORING RULES ─────────────── -->
+  <div class="page" id="page-monitoring">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div>
+        <h2 style="font-size:18px;font-weight:700;">Monitoring Rules</h2>
+        <p style="font-size:13px;color:var(--text-muted);">Define target keywords, subreddits, and thresholds for automated discovery</p>
+      </div>
+      <button class="btn btn-primary" onclick="openCreateRuleModal()">+ Create Monitoring Rule</button>
+    </div>
+    <div id="rules-container"></div>
+  </div>
 
-      <!-- Alert Config -->
-      <div class="card mb-4" style="margin-bottom:20px;">
-        <div class="card-header">
-          <span style="font-size:16px;">🔔</span>
-          <span class="card-title">Alert Dispatch</span>
-        </div>
+  <!-- ── PAGE 4: SUBREDDIT PROFILES ───────────── -->
+  <div class="page" id="page-subreddits">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div>
+        <h2 style="font-size:18px;font-weight:700;">Subreddit Intelligence Profiles</h2>
+        <p style="font-size:13px;color:var(--text-muted);">Community sensitivity, promotion tolerance, and cultural norms</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddSubredditModal()">+ Add Subreddit</button>
+    </div>
+    <div id="subreddits-container" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;"></div>
+  </div>
+
+  <!-- ── PAGE 5: COMPETITORS ──────────────────── -->
+  <div class="page" id="page-competitors">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div>
+        <h2 style="font-size:18px;font-weight:700;">Competitor Tracker</h2>
+        <p style="font-size:13px;color:var(--text-muted);">Auto-generate monitoring rules to intercept competitor complaints & migration searches</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddCompetitorModal()">+ Track Competitor</button>
+    </div>
+    <div id="competitors-container"></div>
+  </div>
+
+  <!-- ── PAGE 6: AI & CRITIC LAB ──────────────── -->
+  <div class="page" id="page-playground">
+    <div class="form-grid" style="margin-bottom:20px;">
+      <!-- Classifier -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Intent Classifier Test</span></div>
         <div class="card-body">
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">NTFY Topic</label>
-              <input type="text" class="form-input" id="ntfy-topic" placeholder="my-reddit-alerts-topic" />
-              <div class="form-hint">Free push notifications via ntfy.sh. Subscribe with the ntfy app using this topic.</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Email (optional)</label>
-              <input type="email" class="form-input" id="alert-email" placeholder="you@example.com" />
-              <div class="form-hint">Requires SendGrid API key in .env file.</div>
-            </div>
-          </div>
+          <textarea class="form-input" id="test-intent-text" rows="3" placeholder="Enter Reddit post text to classify..."></textarea>
+          <button class="btn btn-primary mt-2" style="margin-top:10px;" onclick="testIntentLab()">Classify Intent</button>
+          <div id="test-intent-out" style="margin-top:10px;"></div>
+        </div>
+      </div>
+      <!-- Critic -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Reply Critic Scorecard Test</span></div>
+        <div class="card-body">
+          <input type="text" class="form-input mb-2" id="test-critic-title" placeholder="Post Title..." style="margin-bottom:8px;" />
+          <textarea class="form-input" id="test-critic-reply" rows="3" placeholder="Draft reply to evaluate with Critic..."></textarea>
+          <button class="btn btn-primary mt-2" style="margin-top:10px;" onclick="testCriticLab()">Run Critic Evaluation</button>
+          <div id="test-critic-out" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- ── PAGE 7: SETTINGS ─────────────────────── -->
+  <div class="page" id="page-settings">
+    <div style="max-width:680px;">
+      <!-- Alert settings -->
+      <div class="card mb-4" style="margin-bottom:20px;">
+        <div class="card-header"><span class="card-title">🔔 Alert Channels (ntfy.sh & Email)</span></div>
+        <div class="card-body">
           <div class="form-group">
-            <label class="form-label">Alert on These Intents</label>
-            <div class="tag-filter" id="alert-tags-filter">
-              <span class="tag-btn active" data-tag="buy-intent">🎯 Buy Intent</span>
-              <span class="tag-btn active" data-tag="pain-point">⚡ Pain Point</span>
-              <span class="tag-btn active" data-tag="competitor-complaint">⚔️ Competitor</span>
-              <span class="tag-btn" data-tag="seeking-alternatives">🔀 Seeking Alt.</span>
-              <span class="tag-btn" data-tag="question">❓ Question</span>
-              <span class="tag-btn" data-tag="venting">😤 Venting</span>
-            </div>
+            <label class="form-label">ntfy.sh Topic Name</label>
+            <input type="text" class="form-input" id="setting-ntfy-topic" placeholder="my-unique-redditplus-topic" />
+            <div class="form-hint">Download the free ntfy app (iOS/Android) and subscribe to this topic for instant push alerts.</div>
           </div>
-
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Min Confidence Threshold</label>
-              <input type="range" id="min-confidence" min="0" max="100" value="70" oninput="document.getElementById('confidence-val').textContent=this.value+'%'" style="width:100%;accent-color:var(--reddit-orange);" />
-              <div class="form-hint">Only alert when confidence ≥ <strong id="confidence-val">70%</strong></div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Alert Frequency</label>
-              <select class="select w-full" id="alert-frequency">
-                <option value="immediate">Immediate (as they come)</option>
-                <option value="hourly">Hourly Digest</option>
-                <option value="daily">Daily Digest</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label class="form-label">Email Address (SendGrid)</label>
+            <input type="email" class="form-input" id="setting-alert-email" placeholder="you@example.com" />
           </div>
-
-          <div class="flex gap-2">
-            <button class="btn btn-primary" onclick="saveAlertConfig()">Save Alert Config</button>
-            <button class="btn btn-secondary" onclick="sendTestAlert()">📲 Test Notification</button>
+          <div class="form-group">
+            <label class="form-label">Minimum Opportunity Score to Alert</label>
+            <input type="number" class="form-input" id="setting-min-opp-score" value="75" min="0" max="100" />
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary" onclick="saveAlertSettings()">Save Alert Settings</button>
+            <button class="btn btn-secondary" onclick="testPushNotification()">📲 Test Push Alert</button>
           </div>
         </div>
       </div>
 
-      <!-- LLM Config -->
-      <div class="card mb-4" style="margin-bottom:20px;">
-        <div class="card-header">
-          <span style="font-size:16px;">🤖</span>
-          <span class="card-title">AI Configuration</span>
-        </div>
+      <!-- LLM settings -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">🤖 AI Intelligence Configuration</span></div>
         <div class="card-body">
           <div class="form-group">
-            <label class="form-label">AI Provider</label>
-            <select class="select w-full" id="llm-provider" onchange="updateLLMProviderUI()">
-              <option value="opencode_zen">OpenCode Zen (Free API)</option>
-              <option value="ollama">Ollama (Local)</option>
+            <label class="form-label">AI Backend Provider</label>
+            <select class="select" id="setting-llm-provider">
+              <option value="opencode_zen">OpenCode Zen (Free Cloud Gateway)</option>
+              <option value="ollama">Ollama (Local LLM)</option>
             </select>
           </div>
-          <div id="zen-config">
-            <div class="form-group">
-              <label class="form-label">API Key</label>
-              <input type="password" class="form-input" id="zen-api-key" placeholder="sk-..." />
-              <div class="form-hint">Get a free key at <a href="https://opencode.ai" target="_blank" style="color:var(--reddit-orange);">opencode.ai</a></div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Model</label>
-              <select class="select w-full" id="zen-model">
-                <option value="deepseek-v4-flash-free">deepseek-v4-flash-free (Recommended)</option>
-                <option value="nemotron-3.5-lightning-free">nemotron-3.5-lightning-free</option>
-                <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label class="form-label">Model Name</label>
+            <input type="text" class="form-input" id="setting-llm-model" value="deepseek-v4-flash-free" />
           </div>
-          <div id="ollama-config" style="display:none;">
-            <div class="form-group">
-              <label class="form-label">Ollama Host</label>
-              <input type="text" class="form-input" id="ollama-host" placeholder="http://localhost:11434" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Model</label>
-              <input type="text" class="form-input" id="ollama-model" placeholder="llama3.1:8b" />
-            </div>
+          <div class="form-group">
+            <label class="form-label">OpenCode Zen API Key</label>
+            <input type="password" class="form-input" id="setting-zen-key" placeholder="sk-..." />
+            <div class="form-hint">Obtain a free key at <a href="https://opencode.ai" target="_blank" style="color:var(--reddit-orange);">opencode.ai</a></div>
           </div>
-          <div class="flex gap-2">
-            <button class="btn btn-primary" onclick="saveLLMConfig()">Save AI Config</button>
-            <button class="btn btn-secondary" onclick="testLLMConnection()">🧪 Test Connection</button>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary" onclick="saveLLMSettings()">Save AI Settings</button>
+            <button class="btn btn-secondary" onclick="testAIConnectivity()">🧪 Test AI Connection</button>
           </div>
-          <div id="llm-test-result" class="playground-result hidden mt-2"></div>
+          <div id="llm-test-status" style="margin-top:12px;"></div>
         </div>
       </div>
-
-      <!-- Reddit API Config -->
-      <div class="card mb-4" style="margin-bottom:20px;">
-        <div class="card-header">
-          <span style="font-size:16px;">🔸</span>
-          <span class="card-title">Reddit API (Optional — improves accuracy)</span>
-        </div>
-        <div class="card-body">
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Client ID</label>
-              <input type="text" class="form-input" id="reddit-client-id" placeholder="From reddit.com/prefs/apps" readonly />
-            </div>
-            <div class="form-group">
-              <label class="form-label">User Agent</label>
-              <input type="text" class="form-input" id="reddit-user-agent" placeholder="ParseStream/1.0" readonly />
-            </div>
-          </div>
-          <div class="form-hint" style="margin-top:0;">
-            Reddit API credentials are set in your <code>.env</code> file. Without them, the tool uses Reddit's public JSON endpoints.
-          </div>
-          <div class="mt-2">
-            <button class="btn btn-secondary btn-sm" onclick="testRedditConnection()">🔸 Test Reddit Connection</button>
-            <span id="reddit-test-result" class="text-sm ml-auto" style="margin-left:10px;"></span>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 
+  <!-- ── PAGE 8: LOGS ─────────────────────────── -->
+  <div class="page" id="page-logs">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Real-Time Activity Stream</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadLogs()">↻ Refresh</button>
+      </div>
+      <div class="card-body" id="logs-container" style="font-family:monospace;font-size:12px;"></div>
+    </div>
+  </div>
 </main>
 
-<!-- ── MODALS ──────────────────────────── -->
-<div class="modal-overlay" id="modal-keyword">
-  <div class="modal">
+<!-- ── MODAL: CREATE MONITORING RULE ─────────── -->
+<div class="modal-overlay" id="modal-rule">
+  <div class="modal-box">
     <div class="modal-header">
-      <span class="modal-title">Add Keyword</span>
-      <button class="modal-close" onclick="closeModal('modal-keyword')">×</button>
+      <div class="modal-title">Create Monitoring Rule</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-rule')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label class="form-label">Keyword or Phrase</label>
-        <input type="text" class="form-input" id="kw-input" placeholder="e.g. looking for saas tool, alternative to notion" />
-        <div class="form-hint">Tip: Use comma-separated terms to match any of them</div>
+        <label class="form-label">Rule Name</label>
+        <input type="text" class="form-input" id="rule-name" placeholder="e.g. AI Automation & Agents" />
       </div>
       <div class="form-group">
-        <label class="form-label">Limit to Subreddits (optional)</label>
-        <input type="text" class="form-input" id="kw-subreddits" placeholder="e.g. saas, startups (leave blank for all watched)" />
-        <div class="form-hint">Comma-separated. Leave empty to search all your watched subreddits.</div>
+        <label class="form-label">Keywords (comma-separated)</label>
+        <input type="text" class="form-input" id="rule-keywords" placeholder="e.g. AI automation, workflow agent, n8n alternative" />
+        <button class="btn btn-secondary btn-sm mt-2" style="margin-top:6px;" onclick="expandKeywordsForRule()">✨ AI Keyword Expansion</button>
+        <div id="rule-keyword-suggestions" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
       </div>
       <div class="form-group">
-        <label class="form-label">Min Score Filter</label>
-        <input type="number" class="form-input" id="kw-min-score" value="1" min="0" />
-        <div class="form-hint">Only save posts with at least this many upvotes</div>
+        <label class="form-label">Target Subreddits (comma-separated)</label>
+        <input type="text" class="form-input" id="rule-subreddits" placeholder="e.g. SaaS, startups, webdev" />
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Min Score</label>
+          <input type="number" class="form-input" id="rule-min-score" value="1" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Min Opportunity Score</label>
+          <input type="number" class="form-input" id="rule-min-opp" value="65" />
+        </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-keyword')">Cancel</button>
-      <button class="btn btn-primary" onclick="addKeyword()">Add Keyword</button>
-    </div>
-  </div>
-</div>
-
-<!-- Post Analysis Modal -->
-<div class="modal-overlay" id="modal-analysis" style="z-index:300;">
-  <div class="modal" style="max-width:640px;">
-    <div class="modal-header">
-      <span class="modal-title">🔬 Deep AI Analysis</span>
-      <button class="modal-close" onclick="closeModal('modal-analysis')">×</button>
-    </div>
-    <div class="modal-body" id="analysis-modal-body">
-      <div style="text-align:center;padding:32px;"><div class="loading-spinner dark" style="width:24px;height:24px;"></div></div>
+      <button class="btn btn-secondary" onclick="closeModal('modal-rule')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitMonitoringRule()">Create Rule</button>
     </div>
   </div>
 </div>

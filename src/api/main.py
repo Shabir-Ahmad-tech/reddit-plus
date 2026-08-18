@@ -1,0 +1,75 @@
+"""
+Reddit Plus v2 — FastAPI Application Entrypoint.
+"""
+
+from contextlib import asynccontextmanager
+from pathlib import Path
+import logging
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+from src.config import settings, PROJECT_ROOT
+from src.database.session import init_db
+from src.jobs.runner import job_runner, log_event
+from src.api.v1 import v1_router
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Starting Reddit Plus v2...")
+    init_db()
+    await job_runner.start()
+    log_event("Application startup complete. Monitoring active.", "info")
+    yield
+    # Shutdown
+    logger.info("Shutting down Reddit Plus v2...")
+    await job_runner.stop()
+
+
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title="Reddit Plus API",
+        version=settings.app.version,
+        description="Reddit-Native Social Intelligence & Lead Opportunity Platform",
+        lifespan=lifespan,
+    )
+
+    # CORS configuration
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.app.allowed_origins or ["*"],
+        allow_credentials=True if settings.app.allowed_origins != ["*"] else False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Include API v1 routes
+    app.include_router(v1_router)
+
+    # Legacy routes compatibility
+    # Map legacy stats and mentions endpoints to v1 endpoints for backwards compatibility
+    from .legacy_compat import legacy_router
+    app.include_router(legacy_router)
+
+    # Static assets and SPA mounting
+    static_dir = PROJECT_ROOT / "src" / "api" / "static"
+    if static_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+        @app.get("/", include_in_schema=False)
+        async def serve_index():
+            index_path = static_dir / "index.html"
+            if index_path.exists():
+                return FileResponse(str(index_path))
+            return {"message": "Reddit Plus v2 API operational"}
+
+    return app
+
+
+app = create_app()
