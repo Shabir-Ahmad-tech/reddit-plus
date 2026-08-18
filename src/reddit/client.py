@@ -7,6 +7,8 @@ import asyncio
 import logging
 import re
 import html
+import urllib.request
+import urllib.parse
 from typing import Dict, Any, Optional, List, Tuple
 import httpx
 
@@ -40,7 +42,7 @@ class RedditClient:
     async def get_http_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
             self._client = httpx.AsyncClient(
-                timeout=20.0,
+                timeout=15.0,
                 headers={"User-Agent": self._get_ua()},
                 follow_redirects=True,
             )
@@ -48,73 +50,49 @@ class RedditClient:
 
     async def request(self, path: str, params: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
         """Make an authenticated or public rate-limited Reddit GET request."""
-        await self.rate_limiter.acquire()
-        http_client = await self.get_http_client()
-
-        token = await self.auth_manager.get_token(http_client)
-
-        if token:
-            url = f"https://oauth.reddit.com{path}"
-            headers = {
-                "Authorization": f"Bearer {token}",
-                "User-Agent": settings.reddit.user_agent,
-            }
-            try:
-                resp = await http_client.get(url, params=params, headers=headers)
-                if resp.status_code == 200:
-                    return resp.json()
-            except Exception as e:
-                logger.warning(f"OAuth request to {url} failed: {e}")
-
-        # Fallback to public JSON
-        clean_path = path.rstrip("/")
-        if not clean_path.endswith(".json"):
-            clean_path = f"{clean_path}.json"
-        url = f"https://www.reddit.com{clean_path}"
-        headers = {
-            "User-Agent": self._get_ua(),
-            "Accept": "application/json",
-        }
-
-        for attempt in range(2):
-            try:
-                resp = await http_client.get(url, params=params, headers=headers)
-                if resp.status_code == 200:
-                    return resp.json()
-                elif resp.status_code == 429:
-                    await asyncio.sleep(2.0 ** attempt + 1.0)
-            except Exception:
-                await asyncio.sleep(1.0)
-
+        if self.auth_manager.has_credentials:
+            await self.rate_limiter.acquire()
+            http_client = await self.get_http_client()
+            token = await self.auth_manager.get_token(http_client)
+            if token:
+                url = f"https://oauth.reddit.com{path}"
+                headers = {
+                    "Authorization": f"Bearer {token}",
+                    "User-Agent": settings.reddit.user_agent,
+                }
+                try:
+                    resp = await http_client.get(url, params=params, headers=headers)
+                    if resp.status_code == 200:
+                        return resp.json()
+                except Exception as e:
+                    logger.warning(f"OAuth request to {url} failed: {e}")
         return None
+
+    def _sync_fetch_rss(self, url: str) -> str:
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": self._get_ua(),
+                "Accept": "application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.8",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.read().decode("utf-8", errors="ignore")
 
     async def fetch_rss_feed(self, url: str) -> List[NormalizedSubmission]:
         """Fetch and parse Reddit Atom/RSS feed into NormalizedSubmission objects."""
         await self.rate_limiter.acquire()
-        http_client = await self.get_http_client()
-
-        headers = {
-            "User-Agent": self._get_ua(),
-            "Accept": "application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.8",
-        }
-
-        for attempt in range(3):
+        for attempt in range(2):
             try:
-                resp = await http_client.get(url, headers=headers)
-                if resp.status_code == 429:
-                    wait_time = 2.0 ** attempt + 1.5
-                    logger.debug(f"RSS rate limit on {url}, waiting {wait_time}s")
-                    await asyncio.sleep(wait_time)
-                    continue
-
-                if resp.status_code != 200 or not resp.text:
-                    continue
-
-                return self._parse_atom_xml(resp.text)
+                xml_text = await asyncio.to_thread(self._sync_fetch_rss, url)
+                if xml_text:
+                    return self._parse_atom_xml(xml_text)
             except Exception as e:
-                logger.debug(f"RSS fetch attempt {attempt} failed for {url}: {e}")
-                await asyncio.sleep(1.0)
-
+                logger.debug(f"RSS fetch error for {url}: {e}")
+                if "429" in str(e):
+                    await asyncio.sleep(2.0)
+                else:
+                    await asyncio.sleep(1.0)
         return []
 
     def _parse_atom_xml(self, xml_text: str) -> List[NormalizedSubmission]:
@@ -133,7 +111,6 @@ class RedditClient:
                 author_m = re.search(r"<name>(.*?)</name>", e)
                 author = author_m.group(1).replace("/u/", "").strip() if author_m else "anonymous"
 
-                # Extract subreddit and post id from link: https://www.reddit.com/r/SaaS/comments/1vrmaqf/...
                 sub_m = re.search(r"/r/([A-Za-z0-9_]+)/", link)
                 subreddit = sub_m.group(1).lower() if sub_m else "all"
 

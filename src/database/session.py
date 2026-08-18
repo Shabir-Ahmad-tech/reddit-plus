@@ -1,6 +1,6 @@
 """
 Reddit Plus v2 — Database Engine & Session Factory
-Supports SQLite (local standalone) & PostgreSQL.
+Supports SQLite (local standalone with WAL concurrency) & PostgreSQL.
 """
 
 import os
@@ -9,7 +9,7 @@ from pathlib import Path
 from contextlib import contextmanager
 from typing import Generator
 
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, Session
 
 from src.config import settings, PROJECT_ROOT
@@ -24,19 +24,28 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 # Normalise database URL for SQLite if relative path
 db_url = settings.database.url
 if db_url.startswith("sqlite:///") and not db_url.startswith("sqlite:////"):
-    # Windows relative path support
     raw_path = db_url.replace("sqlite:///", "")
     if not Path(raw_path).is_absolute():
         abs_path = str((PROJECT_ROOT / raw_path).resolve()).replace("\\", "/")
         db_url = f"sqlite:///{abs_path}"
 
-connect_args = {"check_same_thread": False} if "sqlite" in db_url else {}
+connect_args = {"check_same_thread": False, "timeout": 30.0} if "sqlite" in db_url else {}
 engine = create_engine(
     db_url,
     echo=settings.database.echo,
     connect_args=connect_args,
     pool_pre_ping=True,
 )
+
+# Enable SQLite Write-Ahead Logging (WAL) for high concurrency
+if "sqlite" in db_url:
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA busy_timeout=30000")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.close()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -79,7 +88,6 @@ def init_db():
             session.flush()
             logger.info(f"Created default workspace (id={default_ws.id})")
 
-        # Ensure default admin user
         default_user = session.query(User).filter(User.email == "admin@redditplus.local").first()
         if not default_user:
             default_user = User(

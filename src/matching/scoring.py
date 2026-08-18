@@ -23,6 +23,9 @@ class MatchResult:
         comment_id: Optional[int] = None,
     ):
         self.is_match = is_match
+        self.matched = is_match  # Alias for backward compatibility
+        self.score = round(match_score, 1)  # Alias for backward compatibility
+        self.reasons = match_reasons  # Alias for backward compatibility
         self.match_score = round(match_score, 1)
         self.match_reasons = match_reasons
         self.rule_id = rule_id

@@ -30,7 +30,7 @@ from src.alerts.webhook import get_webhook_sender
 
 logger = logging.getLogger(__name__)
 
-# Keep in-memory ring buffer of recent activity logs
+# In-memory activity ring buffer
 activity_logs: deque = deque(maxlen=200)
 
 
@@ -152,49 +152,51 @@ class JobRunner:
 
     async def job_poll_subreddits(self) -> int:
         """Poll monitored subreddits and ingest new posts."""
+        subs_to_poll = set()
         with get_session() as session:
             rule_repo = RuleRepository(session)
             active_rules = rule_repo.get_all_active()
-
-            # Collect unique subreddits from rules + settings
-            subs_to_poll = set(settings.reddit.subreddits)
             for r in active_rules:
                 for rs in (r.rule_subreddits or []):
-                    if not rs.is_excluded and rs.subreddit_name:
+                    if not rs.is_excluded and rs.subreddit_name and rs.subreddit_name.lower() != "all":
                         subs_to_poll.add(rs.subreddit_name.lower().replace("r/", ""))
 
+        # Fallback default target communities
         if not subs_to_poll:
-            subs_to_poll = {"all"}
+            subs_to_poll = {"saas", "startups", "webdev", "entrepreneur", "smallbusiness"}
 
         total_new_posts = 0
-        with get_session() as session:
-            post_repo = PostRepository(session)
 
-            for sub in subs_to_poll:
-                try:
-                    submissions = await self.submission_fetcher.fetch_subreddit_new(sub, limit=25)
-                    for s in submissions:
-                        _, is_new = post_repo.upsert_post(
-                            reddit_id=s.reddit_id,
-                            subreddit=s.subreddit,
-                            title=s.title,
-                            body=s.body,
-                            author=s.author,
-                            url=s.url,
-                            permalink=s.permalink,
-                            score=s.score,
-                            num_comments=s.num_comments,
-                            upvote_ratio=s.upvote_ratio,
-                            post_flair=s.post_flair,
-                            post_type=s.post_type,
-                            thumbnail_url=s.thumbnail_url,
-                            awards_count=s.awards_count,
-                            posted_at=s.posted_at,
-                        )
-                        if is_new:
-                            total_new_posts += 1
-                except Exception as e:
-                    log_event(f"Error polling r/{sub}: {e}", "warning")
+        for sub in list(subs_to_poll)[:6]:
+            try:
+                submissions = await self.submission_fetcher.fetch_subreddit_new(sub, limit=20)
+                if submissions:
+                    with get_session() as session:
+                        post_repo = PostRepository(session)
+                        for s in submissions:
+                            _, is_new = post_repo.upsert_post(
+                                reddit_id=s.reddit_id,
+                                subreddit=s.subreddit,
+                                title=s.title,
+                                body=s.body,
+                                author=s.author,
+                                url=s.url,
+                                permalink=s.permalink,
+                                score=s.score,
+                                num_comments=s.num_comments,
+                                upvote_ratio=s.upvote_ratio,
+                                post_flair=s.post_flair,
+                                post_type=s.post_type,
+                                thumbnail_url=s.thumbnail_url,
+                                awards_count=s.awards_count,
+                                posted_at=s.posted_at,
+                            )
+                            if is_new:
+                                total_new_posts += 1
+                        session.commit()
+                await asyncio.sleep(1.0)
+            except Exception as e:
+                log_event(f"Error polling r/{sub}: {e}", "warning")
 
         return total_new_posts
 
@@ -209,212 +211,203 @@ class JobRunner:
             if not active_rules:
                 return 0
 
-            # Get recent unarchived posts from last 72 hours
-            recent_posts, _ = post_repo.get_recent(hours=72, limit=150)
-            new_matches = 0
+            # Get unmatched posts from the last 72 hours
+            recent_posts = (
+                session.query(RedditPost)
+                .order_by(RedditPost.id.desc())
+                .limit(100)
+                .all()
+            )
 
+            new_matches = 0
             for post in recent_posts:
                 for rule in active_rules:
-                    res = self.matching_engine.evaluate_post(post, rule)
-                    if res.is_match:
-                        _, is_new = match_repo.create_match(
+                    # Check if match already exists
+                    existing = (
+                        session.query(Match)
+                        .filter(Match.rule_id == rule.id, Match.post_id == post.id)
+                        .first()
+                    )
+                    if existing:
+                        continue
+
+                    match_res = self.matching_engine.evaluate_post(post, rule)
+                    if match_res.matched:
+                        match_repo.create_match(
                             workspace_id=rule.workspace_id,
                             rule_id=rule.id,
                             post_id=post.id,
-                            match_score=res.match_score,
-                            match_reasons=res.match_reasons,
+                            match_score=match_res.score,
+                            match_reasons=match_res.reasons,
                         )
-                        if is_new:
-                            new_matches += 1
+                        new_matches += 1
 
-        return new_matches
+            session.commit()
+            return new_matches
 
     async def job_analyze_matches(self) -> int:
-        """Run deep AI intelligence & calculate opportunity scores for matches."""
+        """Run deep AI intelligence & opportunity scoring on new matches."""
         with get_session() as session:
             match_repo = MatchRepository(session)
             analysis_repo = AnalysisRepository(session)
             comment_repo = CommentRepository(session)
 
-            # Get matches without opportunity scores
-            matches, _ = match_repo.get_opportunities(limit=30)
-            analyzed_count = 0
+            # Find matches lacking analysis
+            unmatched = (
+                session.query(Match)
+                .outerjoin(Match.opportunity)
+                .filter(Match.opportunity == None)
+                .limit(15)
+                .all()
+            )
 
-            for match in matches:
-                if not match.post:
+            analyzed_count = 0
+            for match in unmatched:
+                post = match.post
+                if not post:
                     continue
 
-                post = match.post
-                analysis = analysis_repo.get_by_post_id(post.id)
+                # Run intent classification & deep analysis
+                intent_res = await self.intent_classifier.classify(post.body or "", post.title)
+                deep_res = await self.post_analyzer.analyze(post, top_comments=[])
 
-                if not analysis:
-                    # Ingest top comments for richer context if needed
-                    top_comments = []
-                    if post.num_comments and post.num_comments > 0:
-                        try:
-                            norm_comments = await self.comment_fetcher.fetch_post_comments(
-                                subreddit=post.subreddit,
-                                post_reddit_id=post.reddit_id,
-                                limit=5,
-                            )
-                            for nc in norm_comments:
-                                c, _ = comment_repo.upsert_comment(
-                                    reddit_id=nc.reddit_id,
-                                    post_id=post.id,
-                                    body=nc.body,
-                                    author=nc.author,
-                                    score=nc.score,
-                                    permalink=nc.permalink,
-                                    posted_at=nc.posted_at,
-                                )
-                                top_comments.append(c)
-                        except Exception:
-                            pass
+                # Persist post analysis
+                analysis = analysis_repo.save_analysis(
+                    post_id=post.id,
+                    summary=deep_res.summary,
+                    what_it_means=deep_res.what_it_means,
+                    what_it_requires=deep_res.what_it_requires,
+                    urgency=deep_res.urgency,
+                    sentiment=deep_res.sentiment,
+                    intent_tag=intent_res.tag,
+                    intent_confidence=intent_res.confidence,
+                    buy_signal_strength=deep_res.buy_signal_strength,
+                    pain_strength=deep_res.pain_strength,
+                    engagement_potential=deep_res.engagement_potential,
+                    mentioned_products=deep_res.mentioned_products,
+                    pain_keywords=deep_res.pain_keywords,
+                    requirements=deep_res.requirements,
+                    goals=deep_res.goals,
+                    competitors=deep_res.competitors,
+                    recommended_angle=deep_res.recommended_angle,
+                    reddit_context=deep_res.reddit_context,
+                    community_signals=deep_res.community_signals,
+                    is_fallback=deep_res.is_fallback,
+                )
 
-                    # Step 1: Classify intent
-                    intent_res = await self.intent_classifier.classify(post.body or "", post.title)
+                # Calculate deterministic 7-factor opportunity score
+                opp_breakdown = OpportunityScorer.calculate(match, post, analysis)
+                analysis_repo.save_opportunity_score(
+                    match_id=match.id,
+                    total_score=opp_breakdown.total_score,
+                    relevance_score=opp_breakdown.relevance_score,
+                    buying_signal_score=opp_breakdown.buying_signal_score,
+                    pain_score=opp_breakdown.pain_score,
+                    urgency_score=opp_breakdown.urgency_score,
+                    engagement_score=opp_breakdown.engagement_score,
+                    freshness_score=opp_breakdown.freshness_score,
+                    community_fit_score=opp_breakdown.community_fit_score,
+                    recommended_action=opp_breakdown.recommended_action,
+                )
+                analyzed_count += 1
 
-                    # Step 2: Deep post & community analysis
-                    deep_res = await self.post_analyzer.analyze(post, top_comments=top_comments)
-
-                    # Step 3: Save analysis
-                    analysis = analysis_repo.save_analysis(
-                        post_id=post.id,
-                        summary=deep_res.summary,
-                        what_it_means=deep_res.what_it_means,
-                        what_it_requires=deep_res.what_it_requires,
-                        urgency=deep_res.urgency,
-                        sentiment=deep_res.sentiment,
-                        intent_tag=intent_res.tag,
-                        intent_confidence=intent_res.confidence,
-                        buy_signal_strength=deep_res.buy_signal_strength,
-                        pain_strength=deep_res.pain_strength,
-                        engagement_potential=deep_res.engagement_potential,
-                        mentioned_products=deep_res.mentioned_products,
-                        pain_keywords=deep_res.pain_keywords,
-                        requirements=deep_res.requirements,
-                        goals=deep_res.goals,
-                        competitors=deep_res.competitors,
-                        recommended_angle=deep_res.recommended_angle,
-                        reddit_context=deep_res.reddit_context,
-                        community_signals=deep_res.community_signals,
-                        is_fallback=deep_res.is_fallback,
-                    )
-                    analyzed_count += 1
-
-                # Calculate deterministic Opportunity Score
-                if analysis:
-                    opp_breakdown = OpportunityScorer.calculate(match, post, analysis)
-                    analysis_repo.save_opportunity_score(
-                        match_id=match.id,
-                        total_score=opp_breakdown.total_score,
-                        relevance_score=opp_breakdown.relevance_score,
-                        buying_signal_score=opp_breakdown.buying_signal_score,
-                        pain_score=opp_breakdown.pain_score,
-                        urgency_score=opp_breakdown.urgency_score,
-                        engagement_score=opp_breakdown.engagement_score,
-                        freshness_score=opp_breakdown.freshness_score,
-                        community_fit_score=opp_breakdown.community_fit_score,
-                        recommended_action=opp_breakdown.recommended_action,
-                    )
-
-        return analyzed_count
+            session.commit()
+            return analyzed_count
 
     async def job_draft_replies(self) -> int:
-        """Draft multi-strategy replies for actionable high-opportunity matches."""
+        """Draft multi-strategy replies for high-opportunity matches."""
         with get_session() as session:
             match_repo = MatchRepository(session)
             reply_repo = ReplyRepository(session)
 
-            matches, _ = match_repo.get_opportunities(min_opportunity=60, limit=20)
-            drafted_count = 0
+            high_opps = (
+                session.query(Match)
+                .join(Match.opportunity)
+                .filter(Match.reply_drafts == None)
+                .limit(10)
+                .all()
+            )
 
-            for match in matches:
-                if not match.post:
+            drafted_count = 0
+            for match in high_opps:
+                post = match.post
+                analysis = post.analysis if post else None
+                if not post or not analysis:
                     continue
 
-                existing_replies = reply_repo.get_by_match_id(match.id)
-                if not existing_replies:
-                    post = match.post
-                    analysis = post.analysis
+                angle = analysis.recommended_angle
+                reply_res = await self.reply_generator.generate_reply(
+                    title=post.title,
+                    content=post.body or "",
+                    subreddit=post.subreddit,
+                    intent_tag=analysis.intent_tag or "question",
+                    strategy="DIRECT_ANSWER",
+                    recommended_angle=angle,
+                )
 
-                    intent_tag = analysis.intent_tag if analysis else "question"
-                    angle = analysis.recommended_angle if analysis else None
+                reply_repo.create_draft(
+                    match_id=match.id,
+                    post_id=post.id,
+                    content=reply_res.content,
+                    strategy=reply_res.strategy,
+                    model_used=reply_res.model_used,
+                    critic_scorecard=reply_res.critic.to_dict(),
+                    promotion_risk=reply_res.critic.promotion_risk,
+                    is_safe=reply_res.critic.is_safe,
+                )
+                drafted_count += 1
 
-                    # Default to direct answer or value first
-                    strategy = "VALUE_FIRST" if intent_tag == "pain-point" else "DIRECT_ANSWER"
-
-                    res = await self.reply_generator.generate_reply(
-                        title=post.title,
-                        content=post.body or "",
-                        subreddit=post.subreddit,
-                        intent_tag=intent_tag,
-                        strategy=strategy,
-                        recommended_angle=angle,
-                    )
-
-                    reply_repo.create_draft(
-                        match_id=match.id,
-                        post_id=post.id,
-                        content=res.content,
-                        strategy=res.strategy,
-                        model_used=res.model_used,
-                        critic_scorecard=res.critic.to_dict(),
-                        promotion_risk=res.critic.promotion_risk,
-                        is_safe=res.critic.is_safe,
-                    )
-                    drafted_count += 1
-
-        return drafted_count
+            session.commit()
+            return drafted_count
 
     async def job_dispatch_alerts(self) -> int:
-        """Dispatch real-time notifications for high-opportunity leads."""
+        """Dispatch instant alerts for newly discovered high-intent opportunities."""
+        min_score = settings.alerts.min_opportunity_score or 70
         with get_session() as session:
-            match_repo = MatchRepository(session)
             notif_repo = NotificationRepository(session)
 
-            # Find high-score matches that haven't been alerted
-            matches, _ = match_repo.get_opportunities(
-                min_opportunity=settings.alerts.min_opportunity_score,
-                limit=10,
+            high_opps = (
+                session.query(Match)
+                .join(Match.opportunity)
+                .filter(Match.notifications == None)
+                .all()
             )
+
             sent_count = 0
-
-            for match in matches:
-                if not match.post or match.notifications:
-                    continue  # already notified
-
+            for match in high_opps:
                 post = match.post
                 opp = match.opportunity
-                score = opp.total_score if opp else int(match.match_score)
+                if not post or not opp:
+                    continue
 
-                title = f"🔥 Opportunity ({score}/100) in r/{post.subreddit}"
-                msg = f"{post.title}\n\nURL: {post.permalink or post.url}"
+                if opp.total_score < min_score:
+                    continue
 
-                # Send via ntfy
-                if settings.alerts.ntfy_topic:
-                    try:
-                        await self.push_sender.send(
-                            title=title,
-                            message=msg,
-                            url=post.permalink or post.url,
-                            tags=["fire", "reddit"],
-                            priority="high" if score >= 80 else "default",
-                        )
-                        notif_repo.create_notification(
-                            workspace_id=match.workspace_id,
-                            match_id=match.id,
-                            title=title,
-                            message=msg,
-                            channel="ntfy",
-                            status="sent",
-                        )
+                title = f"Opportunity ({opp.total_score}/100): {post.title[:70]}"
+                msg = f"Subreddit: r/{post.subreddit}\nScore: {opp.total_score}\nVerdict: {opp.recommended_action}\nLink: {post.permalink or post.url}"
+
+                # Send push alert
+                if self.push_sender.is_configured():
+                    success = await self.push_sender.send(
+                        title=title,
+                        message=msg,
+                        url=post.permalink or post.url,
+                        tags=["target", "reddit"],
+                    )
+                    notif_repo.create_record(
+                        workspace_id=match.workspace_id,
+                        match_id=match.id,
+                        title=title,
+                        message=msg,
+                        channel="ntfy",
+                        status="sent" if success else "failed",
+                    )
+                    if success:
                         sent_count += 1
-                    except Exception as e:
-                        logger.warning(f"Failed to send ntfy alert: {e}")
 
-        return sent_count
+            session.commit()
+            return sent_count
 
 
-# Global singleton runner
+# Global singleton job runner
 job_runner = JobRunner()

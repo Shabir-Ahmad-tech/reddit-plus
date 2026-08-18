@@ -42,7 +42,7 @@ class MatchRepository:
             return existing, False
 
         match = Match(
-            workspace_id=workspace_id,
+            workspace_id=workspace_id or 1,
             rule_id=rule_id,
             post_id=post_id,
             comment_id=comment_id,
@@ -104,7 +104,12 @@ class MatchRepository:
             q = q.filter(Match.status == status)
 
         if min_opportunity:
-            q = q.filter(OpportunityScore.total_score >= min_opportunity)
+            q = q.filter(
+                or_(
+                    OpportunityScore.total_score >= min_opportunity,
+                    Match.match_score >= min_opportunity,
+                )
+            )
 
         if intent:
             q = q.filter(Analysis.intent_tag == intent)
@@ -114,7 +119,7 @@ class MatchRepository:
 
         total = q.count()
 
-        # Order by Opportunity score descending, then match score
+        # Order by Opportunity score descending, then match score, then recency
         matches = (
             q.order_by(
                 desc(func.coalesce(OpportunityScore.total_score, Match.match_score)),
