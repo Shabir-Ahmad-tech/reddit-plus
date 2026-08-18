@@ -40,16 +40,25 @@ def normalize_submission(data: Dict[str, Any]) -> NormalizedSubmission:
     except Exception:
         posted_at = datetime.utcnow()
 
-    permalink = data.get("permalink", "")
-    full_permalink = f"https://reddit.com{permalink}" if permalink and not permalink.startswith("http") else (permalink or None)
-    author = data.get("author") or "[deleted]"
+    sub_name = (data.get("subreddit") or "all").replace("r/", "").lower()
+    reddit_id = str(data.get("id", "") or "")
 
-    # Body can be in selftext or description
+    permalink = data.get("permalink", "")
+    if permalink and not permalink.startswith("http"):
+        full_permalink = f"https://reddit.com{permalink}"
+    elif permalink and permalink.startswith("http"):
+        full_permalink = permalink
+    elif reddit_id and sub_name:
+        full_permalink = f"https://reddit.com/r/{sub_name}/comments/{reddit_id}"
+    else:
+        full_permalink = f"https://reddit.com/r/{sub_name}"
+
+    author = data.get("author") or "[deleted]"
     body = data.get("selftext") or data.get("body") or ""
 
     return NormalizedSubmission(
-        reddit_id=data.get("id", ""),
-        subreddit=(data.get("subreddit") or "all").replace("r/", "").lower(),
+        reddit_id=reddit_id,
+        subreddit=sub_name,
         title=data.get("title", ""),
         body=body,
         author=str(author),
@@ -76,10 +85,15 @@ def normalize_comment(data: Dict[str, Any], post_reddit_id: str) -> NormalizedCo
         posted_at = datetime.utcnow()
 
     permalink = data.get("permalink", "")
-    full_permalink = f"https://reddit.com{permalink}" if permalink and not permalink.startswith("http") else (permalink or None)
+    if permalink and not permalink.startswith("http"):
+        full_permalink = f"https://reddit.com{permalink}"
+    elif permalink and permalink.startswith("http"):
+        full_permalink = permalink
+    else:
+        full_permalink = None
 
     return NormalizedComment(
-        reddit_id=data.get("id", ""),
+        reddit_id=str(data.get("id", "") or ""),
         post_reddit_id=post_reddit_id,
         parent_reddit_id=data.get("parent_id"),
         body=data.get("body", ""),
