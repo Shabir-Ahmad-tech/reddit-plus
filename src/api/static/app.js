@@ -434,6 +434,10 @@ async function runLiveSearch() {
       method: 'POST',
       body: JSON.stringify({ query: q, subreddit: sub, limit: 10 }),
     });
+    if (!res.items || !res.items.length) {
+      out.innerHTML = `<div style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);padding:10px;">No discussions found for "${esc(q)}". Try different keywords or set up a free Reddit API app in Settings for unlimited live search.</div>`;
+      return;
+    }
     out.innerHTML = `
       <div style="font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);margin-bottom:12px;">FOUND ${res.count} RESULTS FOR "${esc(q)}":</div>` +
       res.items.map(i => {
@@ -692,6 +696,16 @@ async function testCriticLab() {
 async function loadSettings() {
   try {
     const s = await api('/settings');
+    // Reddit credentials
+    if (s.reddit?.client_id && !s.reddit.client_id.startsWith('${')) {
+      document.getElementById('setting-reddit-client-id').value = s.reddit.client_id;
+    }
+    const statusEl = document.getElementById('reddit-auth-status');
+    if (statusEl) {
+      statusEl.textContent = s.reddit?.has_credentials ? '[STATUS: OAUTH ACTIVE]' : '[STATUS: PUBLIC MODE]';
+      statusEl.style.color = s.reddit?.has_credentials ? 'var(--accent-green)' : 'var(--accent-amber)';
+    }
+
     if (s.alerts?.ntfy_topic) document.getElementById('setting-ntfy-topic').value = s.alerts.ntfy_topic;
     if (s.alerts?.email) document.getElementById('setting-alert-email').value = s.alerts.email;
     if (s.alerts?.min_opportunity_score) document.getElementById('setting-min-opp-score').value = s.alerts.min_opportunity_score;
@@ -699,6 +713,21 @@ async function loadSettings() {
     if (s.llm?.model) document.getElementById('setting-llm-model').value = s.llm.model;
   } catch (e) {
     toast(`Failed to load settings: ${e.message}`, 'error');
+  }
+}
+
+async function saveRedditSettings() {
+  const cid = document.getElementById('setting-reddit-client-id').value.trim();
+  const sec = document.getElementById('setting-reddit-client-secret').value.trim();
+  try {
+    const res = await api('/settings/reddit', {
+      method: 'PUT',
+      body: JSON.stringify({ client_id: cid, client_secret: sec }),
+    });
+    toast(res.has_credentials ? 'Reddit OAuth credentials saved & active!' : 'Reddit settings updated (Public Mode)', 'success');
+    loadSettings();
+  } catch (e) {
+    toast(`Failed to save Reddit settings: ${e.message}`, 'error');
   }
 }
 

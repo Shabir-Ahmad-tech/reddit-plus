@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 from typing import Dict, Any
 
 from src.config import settings
-from src.api.schemas.models import AlertSettingsUpdate, LLMSettingsUpdate
+from src.api.schemas.models import AlertSettingsUpdate, LLMSettingsUpdate, RedditSettingsUpdate
 from src.intelligence.router import get_ai_router
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
@@ -22,8 +22,8 @@ def get_current_settings():
             "environment": settings.app.app_env,
         },
         "reddit": {
-            "has_credentials": bool(settings.reddit.client_id and settings.reddit.client_secret),
-            "client_id": settings.reddit.client_id or "Public mode",
+            "has_credentials": bool(settings.reddit.client_id and settings.reddit.client_secret and not settings.reddit.client_id.startswith("${")),
+            "client_id": settings.reddit.client_id or "",
             "user_agent": settings.reddit.user_agent,
             "subreddits": settings.reddit.subreddits,
         },
@@ -44,6 +44,25 @@ def get_current_settings():
             "tags_to_alert": settings.alerts.tags_to_alert,
             "frequency": settings.alerts.frequency,
         },
+    }
+
+
+@router.put("/reddit")
+def update_reddit_settings(req: RedditSettingsUpdate):
+    """Update Reddit API credentials."""
+    if req.client_id is not None:
+        settings.reddit.client_id = req.client_id.strip()
+    if req.client_secret is not None:
+        settings.reddit.client_secret = req.client_secret.strip()
+    if req.user_agent is not None:
+        settings.reddit.user_agent = req.user_agent.strip()
+    if req.subreddits is not None:
+        settings.reddit.subreddits = req.subreddits
+
+    return {
+        "success": True,
+        "has_credentials": bool(settings.reddit.client_id and settings.reddit.client_secret),
+        "client_id": settings.reddit.client_id,
     }
 
 

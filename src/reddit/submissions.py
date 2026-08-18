@@ -1,12 +1,10 @@
 """
-Submissions Ingestion Service.
-Fetches new posts and post details with normalization.
+Reddit Submission Fetcher.
+Retrieves recent submissions from subreddits using OAuth or Atom/RSS fallback.
 """
 
 import logging
 from typing import List, Optional
-from datetime import datetime
-
 from .client import RedditClient
 from .normalizer import normalize_submission
 from .models import NormalizedSubmission
@@ -20,38 +18,45 @@ class SubmissionFetcher:
 
     async def fetch_subreddit_new(
         self,
-        subreddit: str,
-        limit: int = 50,
-        after: Optional[str] = None,
+        subreddit: str = "all",
+        limit: int = 25,
     ) -> List[NormalizedSubmission]:
-        """Fetch newest posts from a subreddit."""
+        """Fetch newest submissions for a subreddit."""
         sub = subreddit.replace("r/", "").strip()
-        path = f"/r/{sub}/new"
-        params = {"limit": min(limit, 100)}
-        if after:
-            params["after"] = after
 
-        data = await self.client.request(path, params=params)
-        if not data or "data" not in data or "children" not in data["data"]:
-            return []
+        # 1. If OAuth credentials are active, use OAuth JSON
+        if self.client.auth_manager.has_credentials:
+            path = f"/r/{sub}/new"
+            params = {"limit": min(limit, 100)}
+            data = await self.client.request(path, params=params)
+            if data and "data" in data and "children" in data["data"]:
+                submissions = []
+                for child in data["data"]["children"]:
+                    if child.get("kind") == "t3" and "data" in child:
+                        norm = normalize_submission(child["data"])
+                        submissions.append(norm)
+                if submissions:
+                    return submissions
 
-        results = []
-        for child in data["data"]["children"]:
-            if child.get("kind") == "t3" and "data" in child:
-                norm = normalize_submission(child["data"])
-                results.append(norm)
+        # 2. In unauthenticated / public mode, directly fetch Reddit Atom/RSS feed
+        rss_url = f"https://www.reddit.com/r/{sub}/new.rss?limit={min(limit, 50)}"
+        return await self.client.fetch_rss_feed(rss_url)
 
-        return results
+    async def fetch_submission_by_id(
+        self,
+        subreddit: str,
+        reddit_id: str,
+    ) -> Optional[NormalizedSubmission]:
+        """Fetch full details for a single submission."""
+        sub = subreddit.replace("r/", "").strip()
+        if self.client.auth_manager.has_credentials:
+            path = f"/r/{sub}/comments/{reddit_id}"
+            data = await self.client.request(path)
+            if isinstance(data, list) and len(data) > 0:
+                post_block = data[0]
+                if "data" in post_block and "children" in post_block["data"]:
+                    children = post_block["data"]["children"]
+                    if children:
+                        return normalize_submission(children[0]["data"])
 
-    async def fetch_submission_by_id(self, reddit_id: str) -> Optional[NormalizedSubmission]:
-        """Fetch full details for a single Reddit submission."""
-        clean_id = reddit_id.replace("t3_", "")
-        path = f"/by_id/t3_{clean_id}"
-        data = await self.client.request(path)
-        if not data or "data" not in data or "children" not in data["data"]:
-            return None
-
-        children = data["data"]["children"]
-        if children:
-            return normalize_submission(children[0]["data"])
         return None

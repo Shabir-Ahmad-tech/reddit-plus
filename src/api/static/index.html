@@ -1080,22 +1080,25 @@
   <div class="page" id="page-posts">
     <div class="panel" style="margin-bottom:20px;">
       <div class="panel-header">
-        <span class="panel-title">LIVE REDDIT SEARCH</span>
+        <span class="panel-title">LIVE REDDIT KEYWORD SEARCH</span>
       </div>
+      <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;">Query Reddit discussions live for immediate keyword discovery:</p>
       <div class="form-grid">
-        <input type="text" class="input" id="live-search-query" placeholder="Search keywords (e.g. 'Zapier alternative')..." />
-        <input type="text" class="input" id="live-search-sub" placeholder="Subreddit (e.g. 'SaaS' or 'all')" value="all" />
+        <input type="text" class="input" id="live-search-query" placeholder="Enter keywords (e.g. 'Zapier alternative' or 'looking for CRM')..." />
+        <input type="text" class="input" id="live-search-sub" placeholder="Subreddit (e.g. 'SaaS', 'startups', or 'all')" value="all" />
       </div>
-      <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="runLiveSearch()">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        SEARCH LIVE REDDIT
-      </button>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="btn btn-primary btn-sm" onclick="runLiveSearch()">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          SEARCH REDDIT NOW
+        </button>
+      </div>
       <div id="live-search-results" style="margin-top:16px;"></div>
     </div>
 
     <div class="panel">
       <div class="panel-header">
-        <span class="panel-title">MONITORED REDDIT DISCUSSIONS</span>
+        <span class="panel-title">STORED REDDIT DISCUSSIONS</span>
       </div>
       <div id="posts-container">
         <div class="skeleton-box"></div>
@@ -1161,7 +1164,27 @@
 
   <!-- ── PAGE 7: SETTINGS ─────────────────────── -->
   <div class="page" id="page-settings">
-    <div style="max-width:720px;">
+    <div style="max-width:740px;">
+      <!-- Reddit API credentials -->
+      <div class="panel" style="margin-bottom:20px;">
+        <div class="panel-header"><span class="panel-title">REDDIT API CREDENTIALS (RECOMMENDED FOR INSTANT UNLIMITED ACCESS)</span></div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">
+          Create a free Reddit "Script" application in 20 seconds at <a href="https://www.reddit.com/prefs/apps" target="_blank" style="color:var(--brand-orange);">reddit.com/prefs/apps</a> to enjoy 60 req/min rate-limit-free ingestion.
+        </p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">REDDIT CLIENT ID</label>
+            <input type="text" class="input" id="setting-reddit-client-id" placeholder="14-char Client ID" style="width:100%;" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">REDDIT CLIENT SECRET</label>
+            <input type="password" class="input" id="setting-reddit-client-secret" placeholder="Secret Key" style="width:100%;" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveRedditSettings()">SAVE REDDIT CREDENTIALS</button>
+        <span id="reddit-auth-status" style="font-family:var(--font-mono);font-size:11.5px;margin-left:12px;color:var(--text-muted);"></span>
+      </div>
+
       <!-- Alerts -->
       <div class="panel" style="margin-bottom:20px;">
         <div class="panel-header"><span class="panel-title">ALERT CHANNELS (NTFY.SH & EMAIL)</span></div>

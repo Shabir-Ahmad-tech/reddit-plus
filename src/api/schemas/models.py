@@ -103,6 +103,13 @@ class LLMSettingsUpdate(BaseModel):
     ollama_host: Optional[str] = None
 
 
+class RedditSettingsUpdate(BaseModel):
+    client_id: Optional[str] = None
+    client_secret: Optional[str] = None
+    user_agent: Optional[str] = None
+    subreddits: Optional[List[str]] = None
+
+
 # --- Subreddits ---
 class SubredditCreate(BaseModel):
     name: str

@@ -5,7 +5,7 @@ Reddit OAuth Token Manager.
 import time
 import base64
 import logging
-from typing import Optional, Tuple
+from typing import Optional
 import httpx
 
 from src.config import settings
@@ -19,7 +19,16 @@ class RedditAuthManager:
     def __init__(self):
         self.access_token: Optional[str] = None
         self.token_expiry: float = 0.0
-        self.has_credentials = bool(settings.reddit.client_id and settings.reddit.client_secret)
+
+    @property
+    def has_credentials(self) -> bool:
+        cid = (settings.reddit.client_id or "").strip()
+        sec = (settings.reddit.client_secret or "").strip()
+        if not cid or not sec:
+            return False
+        if cid.startswith("${") or "your_" in cid.lower() or cid == "None":
+            return False
+        return True
 
     async def get_token(self, client: httpx.AsyncClient) -> Optional[str]:
         if not self.has_credentials:
@@ -30,9 +39,9 @@ class RedditAuthManager:
             return self.access_token
 
         # Request new app-only token
-        auth_header = base64.b64encode(
-            f"{settings.reddit.client_id}:{settings.reddit.client_secret}".encode()
-        ).decode()
+        cid = settings.reddit.client_id.strip()
+        sec = settings.reddit.client_secret.strip()
+        auth_header = base64.b64encode(f"{cid}:{sec}".encode()).decode()
 
         headers = {
             "Authorization": f"Basic {auth_header}",
@@ -57,5 +66,5 @@ class RedditAuthManager:
             logger.info("Acquired fresh Reddit OAuth token")
             return self.access_token
         except Exception as e:
-            logger.warning(f"Reddit OAuth token acquisition failed: {e}. Falling back to public JSON.")
+            logger.warning(f"Reddit OAuth token acquisition failed: {e}. Falling back to public Atom/RSS.")
             return None

@@ -1,18 +1,28 @@
 """
 Async Reddit API Client.
-Seamlessly routes through OAuth (oauth.reddit.com) or Public JSON (www.reddit.com) endpoints.
+Seamlessly routes through OAuth (oauth.reddit.com), Public JSON, and Reddit RSS/Atom feeds.
 """
 
 import asyncio
 import logging
+import re
+import html
 from typing import Dict, Any, Optional, List, Tuple
 import httpx
 
 from src.config import settings
 from .auth import RedditAuthManager
 from .rate_limits import AsyncRateLimiter
+from .models import NormalizedSubmission
+from .normalizer import normalize_submission
 
 logger = logging.getLogger(__name__)
+
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+]
 
 
 class RedditClient:
@@ -20,12 +30,18 @@ class RedditClient:
         self.auth_manager = RedditAuthManager()
         self.rate_limiter = AsyncRateLimiter(requests_per_minute=settings.reddit.rate_limit_per_minute)
         self._client: Optional[httpx.AsyncClient] = None
+        self._ua_index = 0
+
+    def _get_ua(self) -> str:
+        ua = USER_AGENTS[self._ua_index % len(USER_AGENTS)]
+        self._ua_index += 1
+        return ua
 
     async def get_http_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
             self._client = httpx.AsyncClient(
-                timeout=25.0,
-                headers={"User-Agent": settings.reddit.user_agent},
+                timeout=20.0,
+                headers={"User-Agent": self._get_ua()},
                 follow_redirects=True,
             )
         return self._client
@@ -43,44 +59,117 @@ class RedditClient:
                 "Authorization": f"Bearer {token}",
                 "User-Agent": settings.reddit.user_agent,
             }
-        else:
-            # Fallback to public JSON endpoint
-            clean_path = path.rstrip("/")
-            if not clean_path.endswith(".json"):
-                clean_path = f"{clean_path}.json"
-            url = f"https://www.reddit.com{clean_path}"
-            headers = {
-                "User-Agent": settings.reddit.user_agent,
-                "Accept": "application/json",
-            }
-
-        for attempt in range(3):
             try:
                 resp = await http_client.get(url, params=params, headers=headers)
-
-                if resp.status_code == 429:
-                    wait_time = 2.0 ** attempt + 1.0
-                    logger.warning(f"Reddit 429 rate-limited. Backing off for {wait_time}s")
-                    await asyncio.sleep(wait_time)
-                    continue
-
-                if resp.status_code == 404:
-                    logger.debug(f"Reddit endpoint {url} returned 404")
-                    return None
-
-                resp.raise_for_status()
-                return resp.json()
-            except httpx.HTTPStatusError as e:
-                logger.warning(f"Reddit HTTP error on {url} (status {e.response.status_code}): {e}")
-                if attempt == 2:
-                    return None
+                if resp.status_code == 200:
+                    return resp.json()
             except Exception as e:
-                logger.warning(f"Reddit request failed on {url}: {e}")
-                if attempt == 2:
-                    return None
+                logger.warning(f"OAuth request to {url} failed: {e}")
+
+        # Fallback to public JSON
+        clean_path = path.rstrip("/")
+        if not clean_path.endswith(".json"):
+            clean_path = f"{clean_path}.json"
+        url = f"https://www.reddit.com{clean_path}"
+        headers = {
+            "User-Agent": self._get_ua(),
+            "Accept": "application/json",
+        }
+
+        for attempt in range(2):
+            try:
+                resp = await http_client.get(url, params=params, headers=headers)
+                if resp.status_code == 200:
+                    return resp.json()
+                elif resp.status_code == 429:
+                    await asyncio.sleep(2.0 ** attempt + 1.0)
+            except Exception:
                 await asyncio.sleep(1.0)
 
         return None
+
+    async def fetch_rss_feed(self, url: str) -> List[NormalizedSubmission]:
+        """Fetch and parse Reddit Atom/RSS feed into NormalizedSubmission objects."""
+        await self.rate_limiter.acquire()
+        http_client = await self.get_http_client()
+
+        headers = {
+            "User-Agent": self._get_ua(),
+            "Accept": "application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.8",
+        }
+
+        for attempt in range(3):
+            try:
+                resp = await http_client.get(url, headers=headers)
+                if resp.status_code == 429:
+                    wait_time = 2.0 ** attempt + 1.5
+                    logger.debug(f"RSS rate limit on {url}, waiting {wait_time}s")
+                    await asyncio.sleep(wait_time)
+                    continue
+
+                if resp.status_code != 200 or not resp.text:
+                    continue
+
+                return self._parse_atom_xml(resp.text)
+            except Exception as e:
+                logger.debug(f"RSS fetch attempt {attempt} failed for {url}: {e}")
+                await asyncio.sleep(1.0)
+
+        return []
+
+    def _parse_atom_xml(self, xml_text: str) -> List[NormalizedSubmission]:
+        """Robust regex-based Atom/RSS XML parser for Reddit posts."""
+        entries = re.findall(r"<entry>(.*?)</entry>", xml_text, re.DOTALL)
+        results = []
+
+        for e in entries:
+            try:
+                title_m = re.search(r"<title>(.*?)</title>", e)
+                title = html.unescape(title_m.group(1)) if title_m else "Untitled"
+
+                link_m = re.search(r'<link href="(.*?)"', e)
+                link = link_m.group(1) if link_m else ""
+
+                author_m = re.search(r"<name>(.*?)</name>", e)
+                author = author_m.group(1).replace("/u/", "").strip() if author_m else "anonymous"
+
+                # Extract subreddit and post id from link: https://www.reddit.com/r/SaaS/comments/1vrmaqf/...
+                sub_m = re.search(r"/r/([A-Za-z0-9_]+)/", link)
+                subreddit = sub_m.group(1).lower() if sub_m else "all"
+
+                id_m = re.search(r"/comments/([a-z0-9]+)/", link)
+                reddit_id = id_m.group(1) if id_m else ""
+
+                content_m = re.search(r'<content type="html">(.*?)</content>', e, re.DOTALL)
+                raw_html = html.unescape(content_m.group(1)) if content_m else ""
+                clean_body = re.sub(r"<[^>]+>", " ", raw_html).strip()
+                clean_body = re.sub(r"\s+", " ", clean_body)
+
+                # Filter out standard reddit footer links in RSS body
+                clean_body = re.sub(r"submitted by.*?\[link\].*?\[comments\]", "", clean_body).strip()
+
+                if reddit_id and title:
+                    norm = NormalizedSubmission(
+                        reddit_id=reddit_id,
+                        subreddit=subreddit,
+                        title=title,
+                        body=clean_body,
+                        author=author,
+                        url=link,
+                        permalink=link,
+                        score=1,
+                        num_comments=0,
+                        upvote_ratio=1.0,
+                        post_flair=None,
+                        post_type="text",
+                        thumbnail_url=None,
+                        awards_count=0,
+                    )
+                    results.append(norm)
+            except Exception as parse_err:
+                logger.debug(f"Error parsing RSS entry: {parse_err}")
+
+        return results
 
     async def close(self):
         if self._client and not self._client.is_closed:
