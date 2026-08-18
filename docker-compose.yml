@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: parsestream-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    # Pull model on startup
+    command: >
+      sh -c "ollama serve & sleep 5 && ollama pull llama3.1:8b && wait"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: parsestream-app
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - NTFY_TOPIC=${NTFY_TOPIC}
+    volumes:
+      - ./data:/app/data
+      - ./config.yaml:/app/config.yaml:ro
+    restart: unless-stopped
+    command: python -m src.main start
+
+volumes:
+  ollama_data:

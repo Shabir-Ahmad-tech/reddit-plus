@@ -1,0 +1,71 @@
+app:
+  poll_interval_minutes: 15
+  process_interval_minutes: 5
+  max_mentions_per_poll: 50
+  database_path: "data/parsestream.db"
+
+reddit:
+  client_id: "${REDDIT_CLIENT_ID}"
+  client_secret: "${REDDIT_CLIENT_SECRET}"
+  user_agent: "ParseStream-Free/1.0 by u/yourusername"
+  subreddits: ["all"]
+
+hackernews:
+  enabled: true
+  base_url: "https://hacker-news.firebaseio.com/v0"
+
+llm:
+  provider: "opencode_zen" # Options: opencode_zen, ollama, auto
+  model: "deepseek-v4-flash-free" # Free models: deepseek-v4-flash-free, nemotron-3.5-lightning-free, mimo-v2.5-free, hy3-free, gemini-3.5-flash-lite
+  opencode_zen:
+    enabled: true
+    base_url: "https://opencode.ai/zen/v1"
+    api_key: "${OPENCODE_ZEN_API_KEY}"
+    model: "deepseek-v4-flash-free"
+    timeout_seconds: 60
+  ollama:
+    host: "http://localhost:11434"
+    model: "llama3.1:8b"
+    timeout_seconds: 120
+
+ollama:
+  host: "http://localhost:11434"
+  model: "llama3.1:8b"
+  timeout_seconds: 120
+  intent_prompt: |
+    Classify the following mention into ONE category:
+    - buy-intent: User wants to buy/recommend a product or service
+    - pain-point: User complains about a problem or frustration
+    - competitor-complaint: User complains about a competitor's product
+    - question: User asks a question seeking information
+    - praise: User praises a product, service, or company
+    - other: None of the above
+
+    Mention: "{content}"
+
+    Respond with JSON only: {"tag": "...", "confidence": 0.0-1.0}
+  reply_prompt: |
+    Write a helpful, authentic reply to this {source} post.
+    Title: {title}
+    Content: {content}
+    Intent: {intent_tag}
+
+    Guidelines:
+    - Be concise (2-4 sentences)
+    - Add genuine value or insight
+    - Don't sound promotional or salesy
+    - Match the platform's tone (Reddit: casual, HN: technical)
+    - No hashtags, no emojis unless natural
+    - Don't mention you're an AI
+
+alerts:
+  sendgrid:
+    api_key: "${SENDGRID_API_KEY}"
+    from_email: "alerts@yourdomain.com"
+    to_email: "you@example.com"
+  ntfy:
+    topic: "parsestream-alerts-unique-topic"
+    server: "https://ntfy.sh"
+  min_confidence: 0.7
+  alert_tags: ["buy-intent", "pain-point", "competitor-complaint"]
+  digest_frequency: "hourly"
