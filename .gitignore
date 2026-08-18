@@ -4,51 +4,23 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 venv/
 .venv/
-env/
-ENV/
-build/
-dist/
-*.egg-info/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
 
-# Environment
+# Environment variables & secrets
 .env
 .env.local
 .env.*.local
 
-# Database
+# SQLite Databases & Lock Files
 data/*.db
-data/*.db-journal
-*.sqlite
+data/*.db-shm
+data/*.db-wal
 *.sqlite3
 
-# Ollama
-ollama_data/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
+# Logs & temporary files
 *.log
-logs/
-
-# Test coverage
-htmlcov/
 .coverage
-.coverage.*
-coverage.xml
-
-# Docker
-.docker/
+htmlcov/
+.pytest_cache/

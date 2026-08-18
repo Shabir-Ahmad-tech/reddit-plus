@@ -1,7 +1,11 @@
 """
 Webhook Alert Sender for Discord, Slack, and generic webhooks in Reddit Plus v2.
+Hardened with SSRF protection against private network and cloud metadata probes.
 """
 
+import re
+import ipaddress
+import urllib.parse
 import logging
 from typing import Optional, List, Dict, Any
 import httpx
@@ -9,6 +13,49 @@ import httpx
 from src.config import settings
 
 logger = logging.getLogger(__name__)
+
+# Cloud metadata and forbidden local IPs
+BLOCKED_IP_NETWORKS = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("169.254.0.0/16"),  # AWS/GCP/Azure link-local metadata
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+]
+
+
+def is_safe_webhook_url(url: str) -> bool:
+    """Validate webhook URL against SSRF vulnerabilities."""
+    if not url or not isinstance(url, str):
+        return False
+
+    parsed = urllib.parse.urlparse(url.strip())
+    if parsed.scheme not in ("http", "https"):
+        return False
+
+    hostname = parsed.hostname
+    if not hostname:
+        return False
+
+    # Block localhost names directly
+    if hostname.lower() in ("localhost", "127.0.0.1", "0.0.0.0", "metadata.google.internal"):
+        return False
+
+    # If hostname is an IP, check forbidden ranges
+    try:
+        ip = ipaddress.ip_address(hostname)
+        for net in BLOCKED_IP_NETWORKS:
+            if ip in net:
+                logger.warning(f"Blocked SSRF attempt to private/metadata IP: {hostname}")
+                return False
+    except ValueError:
+        # It's a standard domain name (e.g. discord.com, hooks.slack.com)
+        pass
+
+    return True
 
 
 class WebhookAlertSender:
@@ -22,7 +69,7 @@ class WebhookAlertSender:
         return self._client
 
     def is_configured(self) -> bool:
-        return bool(self.webhook_url and self.webhook_url.startswith("http"))
+        return bool(self.webhook_url and is_safe_webhook_url(self.webhook_url))
 
     async def send(
         self,
@@ -32,7 +79,7 @@ class WebhookAlertSender:
         subreddit: Optional[str] = None,
         opportunity_score: Optional[int] = None,
     ) -> bool:
-        """Send alert to Discord, Slack, or generic webhook."""
+        """Send alert to Discord, Slack, or generic webhook with SSRF validation."""
         if not self.is_configured():
             return False
 

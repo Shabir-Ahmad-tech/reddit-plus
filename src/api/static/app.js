@@ -873,20 +873,30 @@ function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+function validateSafeUrl(url) {
+  if (!url || typeof url !== 'string') return '#';
+  const clean = url.trim();
+  if (/^(javascript|data|vbscript|file):/i.test(clean)) {
+    return '#';
+  }
+  if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('/')) {
+    return clean;
+  }
+  return '#';
+}
+
 function buildRedditUrl(urlOrPermalink, subreddit, redditId) {
-  if (urlOrPermalink && urlOrPermalink.startsWith('http')) {
-    return urlOrPermalink;
+  let target = 'https://reddit.com';
+  if (urlOrPermalink && (urlOrPermalink.startsWith('http://') || urlOrPermalink.startsWith('https://'))) {
+    target = urlOrPermalink;
+  } else if (urlOrPermalink && urlOrPermalink.startsWith('/')) {
+    target = `https://reddit.com${urlOrPermalink}`;
+  } else if (subreddit && redditId) {
+    target = `https://reddit.com/r/${encodeURIComponent(subreddit)}/comments/${encodeURIComponent(redditId)}`;
+  } else if (subreddit) {
+    target = `https://reddit.com/r/${encodeURIComponent(subreddit)}`;
   }
-  if (urlOrPermalink && urlOrPermalink.startsWith('/')) {
-    return `https://reddit.com${urlOrPermalink}`;
-  }
-  if (subreddit && redditId) {
-    return `https://reddit.com/r/${subreddit}/comments/${redditId}`;
-  }
-  if (subreddit) {
-    return `https://reddit.com/r/${subreddit}`;
-  }
-  return 'https://reddit.com';
+  return validateSafeUrl(target);
 }
 
 function timeAgo(d) {

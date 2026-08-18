@@ -152,3 +152,5 @@ async def live_search_reddit(req: LiveSearchRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Live search failed: {e}")
+    finally:
+        await client.close()
